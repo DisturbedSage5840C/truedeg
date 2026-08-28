@@ -1,0 +1,50 @@
+# TrueDeg
+
+Counterfactual F1 tyre-degradation modelling. Within a single stint tyre age and
+fuel load are perfectly collinear, so a naive "lap time vs tyre age" curve is
+meaningless. TrueDeg pools many stints across many races, models lap time from
+tyre age **plus context** (fuel, track evolution, thermal, compound, circuit,
+traffic), then sweeps only `TyreLife` with everything else held fixed to recover
+the true degradation curve `D(a) = P_a - P_0`.
+
+## Setup
+
+```bash
+python3.12 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+```
+
+## Pipeline (run in order, verify each step)
+
+```bash
+# 1. Provisioning -- the ONLY networked script. First run is a long download.
+.venv/bin/python -m src.build_dataset --smoke     # 2 races, sanity check
+#    confirm data/stints.parquet has TyreLife / Compound / TrackTemp non-null
+.venv/bin/python -m src.build_dataset             # full RACES list
+
+# 2. Features + the two load-bearing figures. STOP and look at exp1.
+.venv/bin/python -m src.experiments
+
+# 3. Ablation + first TrueDeg curve. Model 1 must beat Model 0.
+.venv/bin/python -m src.model
+
+# 4. Demo
+.venv/bin/streamlit run app.py
+```
+
+## Layout
+
+| Path | Role |
+| --- | --- |
+| `src/build_dataset.py` | FastF1 -> `data/stints.parquet` (networked, cached) |
+| `src/features.py` | fuel / track-evo / thermal proxies |
+| `src/experiments.py` | Experiments 0-6, one figure each -> `figures/` |
+| `src/model.py` | Model 0 vs Model 1 ablation + counterfactual curve |
+| `app.py` | Streamlit live-slider demo |
+
+## Caveats to state in the deck
+
+- `FUEL_S_PER_KG = 0.03` is a published rule of thumb, not a measurement. The
+  model calibrates around it; we do **not** claim to know the fuel load.
+- `Position` is a rough dirty-air proxy until gap/interval telemetry is loaded.
+- Dry laps only, green-flag only, in/out laps removed, per-stint IQR filtered.

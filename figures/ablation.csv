@@ -1,0 +1,3 @@
+model,in_race_mae_s,unseen_race_mae_s
+Model 0 (tyre age + compound),1.617,0.952
+Model 1 (context-aware),0.918,0.502

@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.mypy_cache/
+data/cache/
+.streamlit/secrets.toml
+.DS_Store
+
+# keep the one artifact everything reads
+!data/stints.parquet
