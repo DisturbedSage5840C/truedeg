@@ -27,6 +27,8 @@ python3.12 -m venv .venv
 
 # 3. Interpretable OLS: coefficient table, fuel-prior check, slope progression.
 .venv/bin/python -m src.regression
+#    per-circuit + temperature degradation coefficients
+.venv/bin/python -m src.degradation
 #    then the narrative figures for the idea-submission document
 .venv/bin/python -m src.deck_figures
 
@@ -45,9 +47,11 @@ python3.12 -m venv .venv
 | `src/features.py` | fuel / track-evo / thermal proxies |
 | `src/experiments.py` | Experiments 0-6, one figure each -> `figures/` |
 | `src/regression.py` | Interpretable OLS pace model: coefficients, fuel-prior check, slope progression, `truedeg_curve` |
+| `src/degradation.py` | Per-circuit + temperature-modulated degradation coefficients -> `deg_*.png` |
 | `src/deck_figures.py` | Narrative figures (`deck_*.png`) for `docs/idea-submission.*` |
 | `src/model.py` | Model 0 vs Model 1 ablation + counterfactual curve |
 | `docs/idea-submission.md` | The 11-slide idea-submission document (HTML artifact alongside) |
+| `docs/degradation-estimation.html` | Companion note: degradation coefficient as the estimand, data + regs grounding |
 | `app.py` | Streamlit live-slider demo |
 
 ## Caveats to state in the deck

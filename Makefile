@@ -13,6 +13,7 @@ figures:
 
 deck:
 	$(VENV) -m src.regression
+	$(VENV) -m src.degradation
 	$(VENV) -m src.deck_figures
 
 model:
