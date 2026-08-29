@@ -25,10 +25,15 @@ python3.12 -m venv .venv
 # 2. Features + the two load-bearing figures. STOP and look at exp1.
 .venv/bin/python -m src.experiments
 
-# 3. Ablation + first TrueDeg curve. Model 1 must beat Model 0.
+# 3. Interpretable OLS: coefficient table, fuel-prior check, slope progression.
+.venv/bin/python -m src.regression
+#    then the narrative figures for the idea-submission document
+.venv/bin/python -m src.deck_figures
+
+# 4. Ablation + first TrueDeg curve. Model 1 must beat Model 0.
 .venv/bin/python -m src.model
 
-# 4. Demo
+# 5. Demo
 .venv/bin/streamlit run app.py
 ```
 
@@ -39,7 +44,10 @@ python3.12 -m venv .venv
 | `src/build_dataset.py` | FastF1 -> `data/stints.parquet` (networked, cached) |
 | `src/features.py` | fuel / track-evo / thermal proxies |
 | `src/experiments.py` | Experiments 0-6, one figure each -> `figures/` |
+| `src/regression.py` | Interpretable OLS pace model: coefficients, fuel-prior check, slope progression, `truedeg_curve` |
+| `src/deck_figures.py` | Narrative figures (`deck_*.png`) for `docs/idea-submission.*` |
 | `src/model.py` | Model 0 vs Model 1 ablation + counterfactual curve |
+| `docs/idea-submission.md` | The 11-slide idea-submission document (HTML artifact alongside) |
 | `app.py` | Streamlit live-slider demo |
 
 ## Caveats to state in the deck

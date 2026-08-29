@@ -1,0 +1,864 @@
+<title>TrueDeg Idea Submission</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    /* ---- light: pit-wall printout on cool paper ---- */
+    --paper:        #f5f6f8;
+    --surface:      #ffffff;
+    --surface-2:    #eef0f3;
+    --ink:          #16191f;
+    --ink-soft:     #454b57;
+    --ink-faint:    #6b7280;
+    --rule:         #dcdee3;
+    --rule-strong:  #c3c6cd;
+    --accent:       #c63f27;   /* brake glow — the degradation red, used sparingly */
+    --accent-ink:   #a5321d;
+    --model:        #2f6f7c;   /* context / model teal */
+    --model-soft:   #e2edef;
+    --accent-wash:  #f7e7e2;
+    --shadow:       0 1px 2px rgba(20,25,35,.04), 0 8px 28px rgba(20,25,35,.06);
+
+    /* compound markers (Pirelli) */
+    --c-soft:   #e2352b;
+    --c-medium: #edb32e;
+    --c-hard:   #b9bdc6;
+
+    --measure: 40rem;
+    --wide: 61rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:       #0f1216;
+      --surface:     #161a20;
+      --surface-2:   #1c212a;
+      --ink:         #e7e9ec;
+      --ink-soft:    #aeb4bf;
+      --ink-faint:   #7d838f;
+      --rule:        #2a2f39;
+      --rule-strong: #3a404c;
+      --accent:      #ef6a4c;
+      --accent-ink:  #f2836a;
+      --model:       #64b6c4;
+      --model-soft:  #17323a;
+      --accent-wash: #2a1712;
+      --shadow:      0 1px 2px rgba(0,0,0,.3), 0 10px 34px rgba(0,0,0,.44);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:       #0f1216;
+    --surface:     #161a20;
+    --surface-2:   #1c212a;
+    --ink:         #e7e9ec;
+    --ink-soft:    #aeb4bf;
+    --ink-faint:   #7d838f;
+    --rule:        #2a2f39;
+    --rule-strong: #3a404c;
+    --accent:      #ef6a4c;
+    --accent-ink:  #f2836a;
+    --model:       #64b6c4;
+    --model-soft:  #17323a;
+    --accent-wash: #2a1712;
+    --shadow:      0 1px 2px rgba(0,0,0,.3), 0 10px 34px rgba(0,0,0,.44);
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Spectral", Georgia, "Times New Roman", serif;
+    font-size: 1.0625rem;
+    line-height: 1.66;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ---------- progress rail ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--rule);
+  }
+  .topbar__inner {
+    max-width: var(--wide);
+    margin: 0 auto;
+    padding: .6rem 2rem;
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 1rem;
+  }
+  .topbar__mark {
+    font-family: "Saira Condensed", "Arial Narrow", sans-serif;
+    font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+    font-size: .82rem; color: var(--ink);
+  }
+  .topbar__mark span { color: var(--accent); }
+  .topbar__meta {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .72rem; color: var(--ink-faint); letter-spacing: .02em;
+  }
+  .progress {
+    height: 2px; background: var(--accent);
+    width: var(--scroll, 0%);
+    transition: width .1s linear;
+  }
+  @media (prefers-reduced-motion: reduce) { .progress { transition: none; } }
+
+  /* ---------- shell ---------- */
+  main {
+    max-width: var(--wide);
+    margin: 0 auto;
+    padding: 0 2rem 8rem;
+  }
+
+  .wrap { max-width: var(--measure); }
+
+  /* ---------- hero ---------- */
+  .hero {
+    padding: 5.5rem 0 3rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .hero__eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .74rem; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 1.4rem;
+  }
+  .hero__title {
+    font-family: "Saira Condensed", "Arial Narrow", sans-serif;
+    font-weight: 700;
+    font-size: clamp(3.4rem, 12vw, 6.5rem);
+    line-height: .92;
+    letter-spacing: .01em;
+    margin: 0;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+  .hero__title .glow { color: var(--accent); }
+  .hero__sub {
+    font-family: "Saira Condensed", "Arial Narrow", sans-serif;
+    font-weight: 500;
+    font-size: clamp(1.15rem, 3.4vw, 1.6rem);
+    color: var(--ink-soft);
+    margin: 1rem 0 0;
+    letter-spacing: .005em;
+  }
+  .hero__tags {
+    margin: 2.2rem 0 0;
+    display: flex; flex-wrap: wrap; gap: .5rem;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .72rem; letter-spacing: .04em;
+  }
+  .hero__tags span {
+    border: 1px solid var(--rule-strong);
+    border-radius: 2px;
+    padding: .3rem .55rem;
+    color: var(--ink-faint);
+  }
+
+  .thesis {
+    margin: 3rem 0 0;
+    padding: 1.6rem 1.8rem;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: 3px;
+    box-shadow: var(--shadow);
+    font-size: 1.08rem;
+  }
+  .thesis p { margin: 0; }
+  .thesis strong { font-weight: 600; }
+
+  /* ---------- sections / slides ---------- */
+  .slide {
+    padding: 3.4rem 0 0;
+    scroll-margin-top: 4rem;
+  }
+  .slide + .slide { margin-top: 1rem; }
+
+  .slide__no {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .74rem; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--accent);
+    display: flex; align-items: center; gap: .8rem;
+    margin: 0 0 .9rem;
+  }
+  .slide__no::after {
+    content: ""; flex: 1 1 auto; height: 1px; background: var(--rule);
+    max-width: 6rem;
+  }
+
+  h2 {
+    font-family: "Saira Condensed", "Arial Narrow", sans-serif;
+    font-weight: 600;
+    font-size: clamp(1.7rem, 5vw, 2.5rem);
+    line-height: 1.06;
+    letter-spacing: .01em;
+    margin: 0 0 1.1rem;
+    text-wrap: balance;
+  }
+  h3 {
+    font-family: "Saira Condensed", "Arial Narrow", sans-serif;
+    font-weight: 600;
+    font-size: 1.2rem;
+    letter-spacing: .01em;
+    margin: 2rem 0 .6rem;
+  }
+
+  p { margin: 0 0 1.1rem; }
+  a { color: var(--accent-ink); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+  strong { font-weight: 600; }
+
+  ul { margin: 0 0 1.1rem; padding-left: 1.2rem; }
+  li { margin: 0 0 .5rem; }
+  li::marker { color: var(--ink-faint); }
+
+  .lede {
+    font-size: 1.16rem;
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+
+  .pull {
+    font-family: "Saira Condensed", "Arial Narrow", sans-serif;
+    font-weight: 500;
+    font-size: 1.3rem;
+    line-height: 1.3;
+    color: var(--ink);
+    border-top: 1px solid var(--rule-strong);
+    border-bottom: 1px solid var(--rule-strong);
+    padding: 1rem 0;
+    margin: 1.6rem 0;
+  }
+  .pull--accent { color: var(--accent); border-color: var(--accent); }
+
+  /* ---------- monospace diagram blocks ---------- */
+  pre {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .8rem;
+    line-height: 1.5;
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 1.1rem 1.2rem;
+    overflow-x: auto;
+    margin: 0 0 1.4rem;
+    color: var(--ink-soft);
+    max-width: 100%;
+  }
+  code {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .86em;
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: .05em .35em;
+  }
+  pre code { background: none; border: 0; padding: 0; font-size: 1em; }
+
+  /* ---------- figures (break out wider than text) ---------- */
+  figure {
+    margin: 2rem 0;
+    max-width: var(--wide);
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 1rem;
+    box-shadow: var(--shadow);
+  }
+  figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 2px;
+    background: #fff;   /* the matplotlib PNGs are white-ground; keep them readable in dark mode */
+  }
+  figcaption {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .74rem;
+    line-height: 1.5;
+    color: var(--ink-faint);
+    margin-top: .8rem;
+    padding-left: .1rem;
+  }
+  figcaption b { color: var(--ink-soft); font-weight: 500; }
+
+  /* ---------- data tables ---------- */
+  .tbl-scroll { overflow-x: auto; margin: 0 0 1.4rem; max-width: var(--wide); }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: .92rem;
+    background: var(--surface);
+  }
+  caption {
+    text-align: left;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .72rem; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: 0 0 .55rem;
+  }
+  th, td {
+    text-align: left;
+    padding: .6rem .85rem;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  thead th {
+    font-family: "Saira Condensed", "Arial Narrow", sans-serif;
+    font-weight: 600;
+    font-size: .84rem;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--rule-strong);
+  }
+  td.num, th.num {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: .85rem;
+    white-space: nowrap;
+  }
+  tr.key td { background: var(--accent-wash); }
+  tr.key td.num { color: var(--accent-ink); font-weight: 500; }
+
+  /* compound dot */
+  .cd {
+    display: inline-block; width: .62em; height: .62em; border-radius: 50%;
+    margin-right: .3em; vertical-align: baseline;
+    border: 1px solid rgba(0,0,0,.15);
+  }
+  .cd--s { background: var(--c-soft); }
+  .cd--m { background: var(--c-medium); }
+  .cd--h { background: var(--c-hard); }
+
+  /* ---------- flow strip ---------- */
+  .flow {
+    max-width: var(--wide);
+    margin: 1.5rem 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .flow div {
+    background: var(--surface);
+    padding: .75rem .85rem;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .72rem;
+    line-height: 1.35;
+    color: var(--ink-soft);
+  }
+  .flow div b {
+    display: block;
+    color: var(--accent);
+    font-weight: 500;
+    margin-bottom: .2rem;
+  }
+
+  /* ---------- footer ---------- */
+  footer {
+    max-width: var(--wide);
+    margin: 5rem auto 0;
+    padding: 2rem 2rem 0;
+    border-top: 1px solid var(--rule-strong);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .74rem;
+    color: var(--ink-faint);
+    line-height: 1.7;
+  }
+
+  /* ---------- scroll reveal ---------- */
+  .reveal { opacity: 0; transform: translateY(14px); transition: opacity .6s ease, transform .6s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+  }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+  @media (max-width: 640px) {
+    main { padding: 0 1.25rem 5rem; }
+    .topbar__inner { padding: .55rem 1.25rem; }
+    .topbar__meta { display: none; }
+    footer { padding: 2rem 1.25rem 0; }
+  }
+</style>
+
+<div class="topbar">
+  <div class="topbar__inner">
+    <div class="topbar__mark">TRUE<span>DEG</span></div>
+    <div class="topbar__meta">idea submission &nbsp;/&nbsp; TrackShift '26</div>
+  </div>
+  <div class="progress" id="progress"></div>
+</div>
+
+<main>
+
+  <header class="hero">
+    <p class="hero__eyebrow">TrackShift '26 — AI Motorsport Intelligence</p>
+    <h1 class="hero__title">True<span class="glow">Deg</span></h1>
+    <p class="hero__sub">Estimating true F1 tyre degradation from lap performance</p>
+    <div class="hero__tags">
+      <span>13 races · 2023–2024</span>
+      <span>10,381 racing laps</span>
+      <span>counterfactual regression</span>
+      <span>held-out validation</span>
+    </div>
+
+    <div class="thesis wrap reveal">
+      <p>We observe a <strong>hidden-variable problem</strong> in real F1 data:
+      lap time shifts through a stint for many reasons at once, and tyre
+      degradation is only one of them. We propose a <strong>counterfactual
+      approach</strong> to isolate the tyre's contribution — model expected pace
+      from tyre state <em>plus</em> its context, then hold the context fixed and
+      rewind only tyre age. We demonstrate a first version with a simple,
+      fully-inspectable regression, and validate whether the recovered curve
+      tracks tyre behaviour on races the model never saw.</p>
+    </div>
+  </header>
+
+  <section class="slide wrap" id="s2">
+    <p class="slide__no">Slide 02</p>
+    <h2>Lap time is partly a function of tyre health</h2>
+    <p>There is an intuitive chain. As a tyre accumulates laps its condition
+    changes, and that changing condition contributes to the pace the car can
+    produce.</p>
+    <pre>TYRE AGE  ->  TYRE HEALTH  ->  LAP PERFORMANCE</pre>
+    <p>If tyre age were a clean stand-in for tyre health, estimating degradation
+    would be simple: fit lap time against tyre age and read off the slope. This
+    is the setup — no machine learning yet.</p>
+  </section>
+
+  <section class="slide" id="s3">
+    <div class="wrap">
+      <p class="slide__no">Slide 03</p>
+      <h2>But lap time is not just the tyre</h2>
+      <p>Take real stint data and plot lap time against tyre age. The
+      relationship is not a clean ramp.</p>
+    </div>
+
+    <figure class="reveal">
+      <img src="../figures/deck_raw_pace.png" alt="Lap time through three single stints at the 2023 Bahrain Grand Prix. All three stay near flat over 25 laps, while a dashed line showing the expected pure tyre-age effect rises steeply.">
+      <figcaption>Three long, clean stints from the <b>2023 Bahrain GP</b>. The
+      tyre ages 25 laps; lap time barely moves. The dashed line is what a pure
+      tyre-age model expects from the degradation slope recovered later
+      (+0.11 s/lap). The real stints stay flat.</figcaption>
+    </figure>
+
+    <div class="wrap">
+      <p class="pull">A tyre can be older while the car gets faster. A tyre can
+      be younger while the lap gets slower.</p>
+      <p>The tyre is ageing <strong>while everything around it changes</strong>:</p>
+      <pre>Tyre ageing      -> slower
+Fuel burn        -> faster   (car sheds ~100 kg over a race)
+Track evolution  -> faster   (rubber goes down, grip comes up)
+Temperature      -> changes grip and thermal behaviour
+Traffic          -> dirty air, tow, DRS
+Driver           -> management, push phases</pre>
+      <p>Observed lap time is a mixture of the tyre and everything else happening
+      on the lap. That is the first real obstacle.</p>
+    </div>
+  </section>
+
+  <section class="slide wrap" id="s4">
+    <p class="slide__no">Slide 04</p>
+    <h2>So what are we really trying to estimate?</h2>
+    <p>We do not want to answer <em>"how fast was the lap?"</em> We want to
+    answer:</p>
+    <p class="pull pull--accent">How much of the lap-time change came from the
+    tyre?</p>
+    <pre>                    OBSERVED LAP TIME
+                           |
+          +----------------+----------------+
+          v                v                v
+        TYRE             TRACK             CAR
+        age              evolution         fuel
+        compound         surface           driver
+        stint history    circuit           energy
+          |                |                |
+          +----------------+----------------+
+                           v
+                      ENVIRONMENT  (weather, track / air temp)
+                           |
+                        TRAFFIC   (dirty air, tow, DRS)</pre>
+    <p>Tyre degradation is the hidden component we want to isolate — a
+    latent-variable estimation problem, stated without the jargon.</p>
+  </section>
+
+  <section class="slide wrap" id="s5">
+    <p class="slide__no">Slide 05</p>
+    <h2>What we need to account for</h2>
+    <p>We do not call the other effects "noise". Several are meaningful physical
+    or contextual variables. We group them into layers and model their effect,
+    so it is not misattributed to the tyre.</p>
+
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr><th>Layer</th><th>Variables (proxies available today)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Tyre</td><td>compound, tyre age, stint, tyre history</td></tr>
+          <tr><td>Car &amp; driver</td><td>fuel-load proxy, driver behaviour, energy / deployment proxies, team &amp; car context</td></tr>
+          <tr><td>Track</td><td>circuit, track evolution, surface, day / night</td></tr>
+          <tr><td>Environment</td><td>track temp, air temp, humidity, wind, rain</td></tr>
+          <tr><td>Race conditions</td><td>traffic, dirty air, tow / DRS, track status</td></tr>
+          <tr><td>Regulatory context</td><td>regulation era, tyre generation, fuel &amp; energy rules</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="pull">We do not assume these are noise. We model their effect so we
+    do not incorrectly attribute it to the tyre.</p>
+  </section>
+
+  <section class="slide wrap" id="s6">
+    <p class="slide__no">Slide 06</p>
+    <h2>Grounded in the sport, not just the data</h2>
+    <pre>        FIA REGULATIONS
+              |
+      +-------+-------+
+      v       v       v
+    TYRES    FUEL   ENERGY
+      |       |       |
+      +-------+-------+
+              v
+      operating constraints
+              v
+      F1 DATA + TELEMETRY
+              v
+       MODEL INFERENCE</pre>
+    <ul>
+      <li><strong>Regulations</strong> tell us the constraints and technical
+      context the car and tyres operate under — mandatory compound sets,
+      fuel-flow and race-fuel limits, ERS deployment rules.</li>
+      <li><strong>F1 data</strong> tells us what actually happened lap by lap.</li>
+      <li><strong>The model</strong> estimates the part we cannot directly
+      observe: true tyre degradation.</li>
+    </ul>
+    <p>This is also where the 2026 regulation and tyre-generation context belongs
+    — as framing for what the model must adapt to, not as the project itself.</p>
+  </section>
+
+  <section class="slide" id="s7">
+    <div class="wrap">
+      <p class="slide__no">Slide 07</p>
+      <h2>From observed performance to TrueDeg</h2>
+      <h3>Step 1 — Learn observed pace</h3>
+      <p>Fit lap time from tyre state, a fuel proxy, track evolution, weather,
+      compound and circuit. In the first version this is a plain linear
+      regression:</p>
+      <pre>LapTime ~ C(circuit)                 # circuit fixed effects (absorb the
+        + TyreLife + TyreLife^2      #   ~20 s between-track spread)
+        + FuelKg                     # fuel effect  (estimated, not assumed)
+        + TrackEvoIdx + TrackTemp
+        + C(compound)</pre>
+      <p>Fit on all 10,381 laps: adjusted R&sup2; = 0.982. Every coefficient is
+      inspectable.</p>
+    </div>
+
+    <figure class="reveal">
+      <img src="../figures/deck_coefficients.png" alt="Coefficient plot with 95% confidence intervals for tyre age, tyre age squared, fuel, and track temperature. All intervals are tight and clear of zero.">
+      <figcaption>OLS pace-model coefficients with 95% confidence intervals.
+      Track evolution is left off this plot — it is not separately identified
+      once fuel is in the model.</figcaption>
+    </figure>
+
+    <div class="wrap">
+      <div class="tbl-scroll">
+        <table>
+          <caption>Physics coefficients</caption>
+          <thead>
+            <tr><th>Term</th><th class="num">Estimate</th><th class="num">95% CI</th><th>Reads as</th></tr>
+          </thead>
+          <tbody>
+            <tr class="key"><td>Tyre age</td><td class="num">+0.114 s/lap</td><td class="num">[0.105, 0.122]</td><td>older tyre → slower</td></tr>
+            <tr><td>Tyre age&sup2;</td><td class="num">−0.0016 s/lap&sup2;</td><td class="num">[−0.0019, −0.0014]</td><td>rate eases slightly with age</td></tr>
+            <tr class="key"><td>Fuel</td><td class="num">+0.030 s/kg</td><td class="num">[0.026, 0.035]</td><td>heavier car → slower</td></tr>
+            <tr><td>Track temp</td><td class="num">+0.070 s/&deg;C</td><td class="num">[0.064, 0.076]</td><td>hotter track → slower here</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p><strong>The fuel coefficient is a check on the method.</strong> The
+      codebase carries an independent published rule of thumb of 0.030 s/kg. The
+      regression is given no fuel information beyond a lap-count proxy and
+      recovers <strong>0.030 s/kg</strong> — ratio to prior 1.01. The data
+      reproduces a known number we did not feed it.</p>
+
+      <h3>Step 2 — Hold the context constant</h3>
+      <p>For one fixed race context — circuit, weather, track state, fuel,
+      compound — change only tyre age.</p>
+
+      <h3>Step 3 — Compare against a fresh tyre</h3>
+      <pre>Tyre penalty(N) = Predicted pace(N) - Predicted pace(0)</pre>
+      <p>This difference is our estimate of tyre-induced performance loss. It is
+      the core of TrueDeg.</p>
+    </div>
+
+    <figure class="reveal">
+      <img src="../figures/deck_decomposition.png" alt="One Bahrain hard stint decomposed: a red tyre-degradation line rising to about 1.6 seconds, a blue fuel-burn line falling to about minus 1.4 seconds, and their near-cancelling sum tracking the noisy observed lap time.">
+      <figcaption>One Bahrain hard stint, decomposed by the fitted model: the
+      tyre adds <b>~1.6 s</b> of degradation over 26 laps, fuel burn returns
+      <b>~1.4 s</b>, and the small residual is what the stopwatch shows. Fuel
+      makes the car faster while the tyre makes it slower — which is why the raw
+      stint on Slide 03 looked flat.</figcaption>
+    </figure>
+  </section>
+
+  <section class="slide" id="s8">
+    <div class="wrap">
+      <p class="slide__no">Slide 08</p>
+      <h2>The first prediction</h2>
+      <p>Sweep tyre age 0 → N for a fixed context and read off the predicted
+      penalty. Compare the naive curve with the context-aware curve.</p>
+    </div>
+
+    <figure class="reveal">
+      <img src="../figures/deck_naive_vs_context.png" alt="Left panel: raw pooled pace versus tyre age wanders around zero and dips negative. Right panel: the context-aware counterfactual penalty rises cleanly to about 1.8 seconds by lap 25.">
+      <figcaption><b>Left — naive.</b> Raw pace vs tyre age, pooled over every
+      stint; it wanders around zero and even dips negative — fuel burn cancels
+      degradation. <b>Right — context-aware.</b> The counterfactual penalty rises
+      cleanly to ~1.8 s by lap 25, with fuel, evolution and temperature held
+      fixed.</figcaption>
+    </figure>
+
+    <div class="wrap">
+      <p>The naive curve is not "wrong noise" — it answers a different question.
+      Watch the tyre-age coefficient as we add one control at a time.</p>
+    </div>
+
+    <figure class="reveal">
+      <img src="../figures/deck_slope_progression.png" alt="Horizontal bar chart of the estimated tyre-age effect. It starts strongly negative for tyre age alone, and turns positive only after track evolution and fuel are added.">
+      <figcaption>Tyre-age effect on lap time as physical controls are added.
+      Fuel burn and track evolution together account for the entire gap between
+      the wrong-signed naive estimate and the recovered degradation.</figcaption>
+    </figure>
+
+    <div class="wrap">
+      <div class="tbl-scroll">
+        <table>
+          <caption>Tyre-age coefficient by model</caption>
+          <thead>
+            <tr><th>Model</th><th class="num">Tyre-age effect</th><th>Note</th></tr>
+          </thead>
+          <tbody>
+            <tr class="key"><td>tyre age only</td><td class="num">−0.17 s/lap</td><td>tyres appear to get <em>faster</em> — wrong sign</td></tr>
+            <tr><td>+ circuit</td><td class="num">−0.011 s/lap</td><td></td></tr>
+            <tr><td>+ compound</td><td class="num">−0.004 s/lap</td><td></td></tr>
+            <tr><td>+ track temp</td><td class="num">+0.001 s/lap</td><td></td></tr>
+            <tr><td>+ track evolution</td><td class="num">+0.066 s/lap</td><td></td></tr>
+            <tr class="key"><td>+ fuel &nbsp;(full model)</td><td class="num">+0.114 s/lap</td><td>recovered degradation</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="s9">
+    <div class="wrap">
+      <p class="slide__no">Slide 09</p>
+      <h2>Validating the idea</h2>
+      <p>Refit the model with one race completely held out, predict that race's
+      degradation curve, and compare it with the actual fuel-corrected stint pace
+      — the median over every fresh stint of that compound.</p>
+    </div>
+
+    <figure class="reveal">
+      <img src="../figures/deck_validation.png" alt="Two panels. Bahrain 2023 hard: the predicted curve tracks the actual median within about 0.2 seconds. Spain 2023 medium: the predicted curve has the right shape but runs about 0.7 seconds high.">
+      <figcaption><b>Bahrain 2023, hard (held out):</b> the recovered curve has
+      the right shape and tracks the actual median within ~0.2 s.
+      <b>Spain 2023, medium (held out):</b> right shape again, but the single
+      global rate runs ~0.7 s high on this lower-degradation circuit.</figcaption>
+    </figure>
+
+    <div class="wrap">
+      <p>Honest read: a single field-wide rate captures the <em>shape</em> of
+      degradation on unseen races but not yet the <em>level</em> on every
+      circuit. Per-circuit and per-compound slopes are the next iteration, not a
+      claim we make now.</p>
+
+      <p>On raw predictive accuracy the interpretable model is deliberately
+      modest — on absolute lap time, where lap-to-lap variability dominates, the
+      context terms cut held-out MAE only ~6% (1.51 → 1.43 s). A flexible
+      gradient-boosted model on the same features, scored on circuit-normalised
+      pace, cuts held-out error <strong>43–47%</strong> versus the naive
+      tyre-age model — tested both on the rest of each race and on entirely
+      unseen races. The interpretable model's value is in its coefficients; the
+      flexible model shows the signal is real and exploitable.</p>
+
+      <p class="pull">The scientific test: does a curve learned <em>after</em>
+      accounting for context explain unseen F1 tyre behaviour better than the
+      naive tyre-age model? On shape and on normalised pace error, yes. On
+      absolute per-circuit level, not yet.</p>
+    </div>
+  </section>
+
+  <section class="slide wrap" id="s10">
+    <p class="slide__no">Slide 10</p>
+    <h2>Beyond the first model</h2>
+    <p><strong>Today / this idea.</strong> Structured F1 data — timing, tyres,
+    telemetry, weather, track, race context — feeds a context-aware model that
+    produces a degradation curve.</p>
+    <p><strong>Future.</strong> Add information a lap table does not contain:</p>
+    <pre>                TRUEDEG
+                   |
+      +------------+------------+
+      v            v            v
+  telemetry      video       pit data
+      |            |            |
+      +------------+------------+
+                   v
+             temporal state
+                   v
+        richer tyre intelligence</pre>
+    <p>Video signals worth exploring later: onboard footage, visible locking and
+    sliding, pit-stop footage, track and weather cues. On the modelling side:
+    temporal models (LSTM / GRU) for within-stint state, multimodal fusion, and
+    physics-informed constraints so the curve obeys known tyre behaviour. This is
+    the extension, not the initial claim.</p>
+  </section>
+
+  <section class="slide wrap" id="s11">
+    <p class="slide__no">Slide 11</p>
+    <h2>What TrueDeg enables</h2>
+    <p class="lede">From "how fast?" to "why?". Once we can estimate the tyre's
+    actual performance state:</p>
+    <ul>
+      <li><strong>Tyre intelligence</strong> — how much performance has the tyre
+      actually lost?</li>
+      <li><strong>Degradation forecasting</strong> — how quickly will it lose
+      more?</li>
+      <li><strong>Driver / car analysis</strong> — is the loss tyre-driven or
+      operational?</li>
+      <li><strong>Condition analysis</strong> — how does the tyre respond to
+      different track and weather?</li>
+      <li><strong>Race strategy</strong> — when does the cost of staying out
+      outweigh the cost of pitting?</li>
+      <li><strong>Post-race analysis</strong> — what did we predict versus what
+      happened?</li>
+    </ul>
+  </section>
+
+  <section class="slide" id="flow">
+    <div class="wrap">
+      <p class="slide__no">The deck in one flow</p>
+    </div>
+    <div class="flow reveal">
+      <div><b>1</b> tyre age</div>
+      <div><b>2</b> tyre health</div>
+      <div><b>3</b> lap performance</div>
+      <div><b>4</b> real data breaks it</div>
+      <div><b>5</b> everything else changes</div>
+      <div><b>6</b> map those variables</div>
+      <div><b>7</b> ground in F1 + FIA context</div>
+      <div><b>8</b> estimate expected pace</div>
+      <div><b>9</b> rewind tyre age</div>
+      <div><b>10</b> isolate the tyre penalty</div>
+      <div><b>11</b> generate the curve</div>
+      <div><b>12</b> validate on real F1</div>
+      <div><b>13</b> temporal + multimodal + physics</div>
+      <div><b>14</b> race / engineering use cases</div>
+    </div>
+  </section>
+
+  <section class="slide" id="appendix">
+    <div class="wrap">
+      <p class="slide__no">Appendix</p>
+      <h2>Reproducing the numbers</h2>
+      <p>Every figure and number in this document is produced by the prototype
+      repo:</p>
+      <pre>python -m src.build_dataset      # FastF1 -> data/stints.parquet (13 races)
+python -m src.experiments        # exploratory figures (exp0–exp6)
+python -m src.regression         # OLS coefficients, fuel-prior check, slope progression
+python -m src.deck_figures       # the narrative figures in this document
+python -m src.model              # flexible-model ablation (supporting evidence)</pre>
+      <p><strong>Data.</strong> 13 races, 2023–2024. Five circuits (Bahrain,
+      Spain, Silverstone, Monza, Suzuka) appear in both seasons; Jeddah, Monaco
+      and Las Vegas are single-season generalisation hold-outs. 10,381 laps after
+      keeping green, dry, racing laps and removing in / out laps and per-stint
+      outliers. Compounds: <span class="cd cd--h"></span>hard 5,562 ·
+      <span class="cd cd--m"></span>medium 2,997 ·
+      <span class="cd cd--s"></span>soft 1,822.</p>
+
+      <h3>Known limitations, stated up front</h3>
+      <ul>
+        <li><code>FuelKg</code> is a lap-count proxy scaled to a published
+        0.03 s/kg rule of thumb, not a measurement. The model calibrates around
+        it; we do not claim to know the fuel load.</li>
+        <li>Within a single stint, tyre age and fuel load are perfectly
+        collinear (correlation −1.00 — both linear in lap number). Only pooling
+        stints that start at different race laps breaks this (pooled correlation
+        −0.41), which is why the method needs many races, not one.</li>
+      </ul>
+    </div>
+
+    <figure class="reveal">
+      <img src="../figures/deck_collinearity.png" alt="Left: six individual stints, each a perfectly straight downward line of fuel against tyre age. Right: all races pooled, a wide vertical spread of fuel load at any given tyre age.">
+      <figcaption><b>Left:</b> one stint at a time — tyre age and fuel are the
+      same clock, correlation −1.00. <b>Right:</b> 13 races pooled — one tyre age
+      now spans every fuel load, correlation −0.41. Pooling is what makes the
+      coefficients identifiable.</figcaption>
+    </figure>
+
+    <div class="wrap">
+      <ul>
+        <li>Track evolution is not separately identified once fuel is in the
+        model (wide CI spanning zero); its effect on the slope progression is
+        real but its point estimate is not reliable on this dataset.</li>
+        <li>A single global degradation rate over-predicts on low-degradation
+        circuits (Slide 09). Per-circuit / per-compound slopes are future work.</li>
+        <li><code>Position</code> is a coarse dirty-air proxy until gap / interval
+        telemetry is loaded.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    TRUEDEG · idea submission · TrackShift '26<br>
+    Counterfactual F1 tyre-degradation modelling — interpretable regression + held-out validation.<br>
+    All numbers from 13 races (2023–2024), 10,381 green dry racing laps.
+  </footer>
+
+</main>
+
+<script>
+  (function () {
+    var progress = document.getElementById("progress");
+    function onScroll() {
+      var h = document.documentElement;
+      var max = h.scrollHeight - h.clientHeight;
+      var pct = max > 0 ? (h.scrollTop / max) * 100 : 0;
+      progress.style.setProperty("--scroll", pct.toFixed(1) + "%");
+    }
+    document.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduce && "IntersectionObserver" in window) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+        });
+      }, { rootMargin: "0px 0px -8% 0px" });
+      document.querySelectorAll(".reveal").forEach(function (el) { io.observe(el); });
+    } else {
+      document.querySelectorAll(".reveal").forEach(function (el) { el.classList.add("in"); });
+    }
+  })();
+</script>

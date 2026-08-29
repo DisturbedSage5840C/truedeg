@@ -1,6 +1,6 @@
 VENV = .venv/bin/python
 
-.PHONY: smoke data figures model app clean
+.PHONY: smoke data figures deck model app clean
 
 smoke:
 	$(VENV) -m src.build_dataset --smoke
@@ -10,6 +10,10 @@ data:
 
 figures:
 	$(VENV) -m src.experiments
+
+deck:
+	$(VENV) -m src.regression
+	$(VENV) -m src.deck_figures
 
 model:
 	$(VENV) -m src.model
