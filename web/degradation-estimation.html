@@ -1,0 +1,789 @@
+<title>Estimating F1 Tyre Degradation</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    /* light — instrument panel on cool graphite-tinted paper */
+    --paper:        #f2f4f5;
+    --surface:      #ffffff;
+    --surface-2:    #e8ecee;
+    --ink:          #14181b;
+    --ink-soft:     #46505a;
+    --ink-faint:    #6f7a83;
+    --rule:         #d7dde0;
+    --rule-strong:  #bfc8cc;
+
+    --method:       #1f7a8c;   /* the estimator / the model — cool */
+    --method-wash:  #e0eef1;
+    --answer:       #c1462b;   /* the recovered coefficient — the reading */
+    --answer-wash:  #f6e6e1;
+    --answer-ink:   #a3371f;
+
+    --ok:           #2f7d4f;
+
+    --shadow: 0 1px 2px rgba(15,20,25,.05), 0 10px 30px rgba(15,20,25,.07);
+
+    --measure: 40rem;
+    --wide: 62rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:       #0e1113;
+      --surface:     #161a1d;
+      --surface-2:   #1d2226;
+      --ink:         #e6e9ea;
+      --ink-soft:    #a9b2b8;
+      --ink-faint:   #79838a;
+      --rule:        #282f33;
+      --rule-strong: #3a4247;
+      --method:      #52b9cb;
+      --method-wash: #123037;
+      --answer:      #ef6a4c;
+      --answer-wash: #2b1712;
+      --answer-ink:  #f2856b;
+      --ok:          #57b981;
+      --shadow: 0 1px 2px rgba(0,0,0,.32), 0 12px 36px rgba(0,0,0,.46);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:       #0e1113;
+    --surface:     #161a1d;
+    --surface-2:   #1d2226;
+    --ink:         #e6e9ea;
+    --ink-soft:    #a9b2b8;
+    --ink-faint:   #79838a;
+    --rule:        #282f33;
+    --rule-strong: #3a4247;
+    --method:      #52b9cb;
+    --method-wash: #123037;
+    --answer:      #ef6a4c;
+    --answer-wash: #2b1712;
+    --answer-ink:  #f2856b;
+    --ok:          #57b981;
+    --shadow: 0 1px 2px rgba(0,0,0,.32), 0 12px 36px rgba(0,0,0,.46);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+    font-size: 1.06rem;
+    line-height: 1.66;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ---- sticky header carrying the thesis equation ---- */
+  .bar {
+    position: sticky; top: 0; z-index: 40;
+    background: color-mix(in srgb, var(--paper) 90%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--rule);
+  }
+  .bar__in {
+    max-width: var(--wide); margin: 0 auto;
+    padding: .55rem 2rem;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  }
+  .bar__mark {
+    font-family: "Archivo", system-ui, sans-serif;
+    font-weight: 700; font-size: .82rem; letter-spacing: .16em; text-transform: uppercase;
+  }
+  .bar__eq {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: .72rem; color: var(--ink-faint); white-space: nowrap;
+  }
+  .bar__eq b { color: var(--answer); font-weight: 500; }
+  .progress { height: 2px; background: var(--method); width: var(--p, 0%); }
+  @media (prefers-reduced-motion: no-preference) { .progress { transition: width .1s linear; } }
+
+  main { max-width: var(--wide); margin: 0 auto; padding: 0 2rem 7rem; }
+  .col { max-width: var(--measure); }
+
+  /* ---- hero ---- */
+  .hero { padding: 5rem 0 2.5rem; border-bottom: 1px solid var(--rule); }
+  .hero__kick {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: .74rem; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--ink-faint); margin: 0 0 1.3rem;
+  }
+  .hero h1 {
+    font-family: "Archivo", system-ui, sans-serif;
+    font-weight: 700;
+    font-size: clamp(2.3rem, 6.2vw, 3.9rem);
+    line-height: 1.03;
+    letter-spacing: -.01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .hero h1 .a { color: var(--answer); }
+  .hero h1 .m { color: var(--method); }
+  .hero__sub {
+    font-size: 1.2rem; color: var(--ink-soft);
+    margin: 1.2rem 0 0; max-width: 34rem;
+  }
+  .hero__tags {
+    margin: 2rem 0 0; display: flex; flex-wrap: wrap; gap: .5rem;
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: .72rem;
+  }
+  .hero__tags span {
+    border: 1px solid var(--rule-strong); border-radius: 2px;
+    padding: .3rem .55rem; color: var(--ink-faint);
+  }
+
+  /* ---- the estimator equation block ---- */
+  .eqbox {
+    margin: 2.6rem 0 0;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .eqbox__head {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: .7rem; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: .7rem 1.2rem;
+    border-bottom: 1px solid var(--rule);
+    background: var(--surface-2);
+  }
+  .eqbox__body {
+    padding: 1.4rem 1.2rem;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: .92rem; line-height: 1.9;
+    overflow-x: auto;
+  }
+  .eqbox__body .obs { color: var(--ink); font-weight: 500; }
+  .eqbox__body .unk { color: var(--answer); font-weight: 500; }
+  .eqbox__body .ctx { color: var(--method); }
+  .eqbox__note {
+    padding: 0 1.2rem 1.2rem;
+    font-family: "Source Serif 4", serif; font-size: .96rem; color: var(--ink-soft);
+  }
+
+  /* ---- sections ---- */
+  section.s { padding: 3.6rem 0 0; scroll-margin-top: 4rem; }
+  .s__label {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--method);
+    display: flex; align-items: center; gap: .8rem;
+    margin: 0 0 1rem;
+  }
+  .s__label::after { content:""; flex:1; height:1px; background: var(--rule); max-width: 5rem; }
+
+  h2 {
+    font-family: "Archivo", system-ui, sans-serif;
+    font-weight: 600; font-size: clamp(1.55rem, 4.2vw, 2.15rem);
+    line-height: 1.12; letter-spacing: -.005em; margin: 0 0 1rem;
+    text-wrap: balance;
+  }
+  h3 {
+    font-family: "Archivo", system-ui, sans-serif;
+    font-weight: 600; font-size: 1.12rem; margin: 1.9rem 0 .5rem;
+  }
+  p { margin: 0 0 1.05rem; }
+  a { color: var(--method); text-underline-offset: 2px; }
+  strong { font-weight: 600; }
+  em { font-style: italic; }
+
+  ul { margin: 0 0 1.05rem; padding-left: 1.15rem; }
+  li { margin: 0 0 .45rem; }
+  li::marker { color: var(--ink-faint); }
+
+  .lede { font-size: 1.14rem; color: var(--ink-soft); }
+
+  .callout {
+    border-left: 3px solid var(--answer);
+    background: var(--answer-wash);
+    padding: 1rem 1.2rem; border-radius: 0 3px 3px 0;
+    margin: 1.5rem 0;
+  }
+  .callout p { margin: 0; }
+  .callout--m { border-color: var(--method); background: var(--method-wash); }
+
+  .rule-cite {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: .78rem; color: var(--ink-faint);
+    border-top: 1px dashed var(--rule-strong);
+    margin-top: .4rem; padding-top: .5rem;
+  }
+  .rule-cite a { color: var(--ink-faint); }
+
+  pre {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: .8rem; line-height: 1.5;
+    background: var(--surface-2); border: 1px solid var(--rule);
+    border-radius: 3px; padding: 1rem 1.1rem; overflow-x: auto;
+    margin: 0 0 1.3rem; color: var(--ink-soft); max-width: 100%;
+  }
+  code {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: .86em; background: var(--surface-2);
+    border: 1px solid var(--rule); border-radius: 2px; padding: .04em .34em;
+  }
+  pre code { background: none; border: 0; padding: 0; }
+
+  figure {
+    margin: 2rem 0; max-width: var(--wide);
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 4px; padding: 1rem; box-shadow: var(--shadow);
+  }
+  figure img { display: block; width: 100%; height: auto; border-radius: 2px; background: #fff; }
+  figcaption {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: .74rem; line-height: 1.5; color: var(--ink-faint);
+    margin-top: .8rem;
+  }
+  figcaption b { color: var(--ink-soft); font-weight: 500; }
+
+  .tbl { overflow-x: auto; margin: 0 0 1.3rem; max-width: var(--wide); }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; background: var(--surface); }
+  caption {
+    text-align: left; font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: .7rem; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-faint); padding: 0 0 .5rem;
+  }
+  th, td { text-align: left; padding: .55rem .8rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  thead th {
+    font-family: "Archivo", system-ui, sans-serif; font-weight: 600;
+    font-size: .82rem; letter-spacing: .03em; text-transform: uppercase;
+    color: var(--ink-soft); border-bottom: 1px solid var(--rule-strong);
+  }
+  td.n, th.n {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums; font-size: .84rem; white-space: nowrap;
+  }
+  tr.hi td { background: var(--answer-wash); }
+  tr.hi td.n { color: var(--answer-ink); font-weight: 500; }
+
+  /* observed -> recovered motif */
+  .flip {
+    display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem;
+    align-items: stretch; margin: 1.6rem 0; max-width: var(--wide);
+  }
+  .flip > div {
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 4px; padding: 1rem 1.1rem;
+  }
+  .flip .arrow {
+    display: flex; align-items: center; justify-content: center;
+    font-family: "JetBrains Mono", ui-monospace, monospace; color: var(--ink-faint);
+    border: 0; background: none; font-size: 1.4rem;
+  }
+  .flip h4 {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: .68rem; letter-spacing: .12em; text-transform: uppercase;
+    margin: 0 0 .5rem; color: var(--ink-faint);
+  }
+  .flip .obs h4 { color: var(--ink-soft); }
+  .flip .rec h4 { color: var(--answer); }
+  .flip p { margin: 0; font-size: .96rem; }
+  @media (max-width: 620px) {
+    .flip { grid-template-columns: 1fr; }
+    .flip .arrow { transform: rotate(90deg); padding: .2rem 0; }
+  }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem,1fr)); gap: 1px;
+    background: var(--rule); border: 1px solid var(--rule); border-radius: 4px; overflow: hidden;
+    max-width: var(--wide); margin: 1.4rem 0; }
+  .cards > div { background: var(--surface); padding: 1rem 1.1rem; }
+  .cards h4 { font-family: "Archivo", system-ui, sans-serif; font-size: .98rem; margin: 0 0 .35rem; }
+  .cards p { margin: 0; font-size: .92rem; color: var(--ink-soft); }
+
+  footer {
+    max-width: var(--wide); margin: 4.5rem auto 0; padding: 2rem 2rem 0;
+    border-top: 1px solid var(--rule-strong);
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: .74rem; color: var(--ink-faint); line-height: 1.7;
+  }
+  footer ol { padding-left: 1.4rem; }
+  footer li { margin: 0 0 .5rem; }
+  footer a { color: var(--ink-faint); }
+
+  .reveal { opacity: 0; transform: translateY(12px); transition: opacity .55s ease, transform .55s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+
+  :focus-visible { outline: 2px solid var(--method); outline-offset: 3px; border-radius: 2px; }
+
+  @media (max-width: 640px) {
+    main { padding: 0 1.2rem 5rem; }
+    .bar__in { padding: .5rem 1.2rem; }
+    .bar__eq { display: none; }
+    footer { padding: 2rem 1.2rem 0; }
+  }
+</style>
+
+<div class="bar">
+  <div class="bar__in">
+    <span class="bar__mark">TrueDeg</span>
+    <span class="bar__eq">lap&nbsp;time&nbsp;=&nbsp;context&nbsp;+&nbsp;<b>d&nbsp;&times;&nbsp;tyre&nbsp;age</b>&nbsp;&nbsp;&rarr;&nbsp;&nbsp;solve&nbsp;for&nbsp;<b>d</b></span>
+  </div>
+  <div class="progress" id="progress"></div>
+</div>
+
+<main>
+
+  <header class="hero">
+    <p class="hero__kick">TrackShift '26 · idea submission · companion note</p>
+    <h1>Lap time is the <span class="m">instrument</span>.<br>Tyre <span class="a">degradation</span> is the reading.</h1>
+    <p class="hero__sub">No sensor reports how much grip a tyre has lost. We estimate
+    it — by writing lap time as a function of degradation plus everything else we
+    can account for, then inverting for the degradation coefficient and checking
+    it against lap times the model never saw.</p>
+    <div class="hero__tags">
+      <span>13 races · 2023–2024</span>
+      <span>10,381 green dry laps</span>
+      <span>FastF1 timing + weather</span>
+      <span>8 circuit coefficients</span>
+    </div>
+
+    <div class="eqbox reveal">
+      <div class="eqbox__head">the estimator — one equation, one unknown of interest</div>
+      <div class="eqbox__body">
+<span class="obs">LapTime(lap)</span> =&nbsp; circuit_baseline<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+&nbsp; <span class="unk">d(circuit, compound, track_temp) &times; tyre_age</span>&nbsp;&nbsp;&larr; the unknown<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+&nbsp; curvature &times; tyre_age&sup2;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+&nbsp; <span class="ctx">fuel_effect + track_evolution + thermal</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+&nbsp; noise
+      </div>
+      <p class="eqbox__note">Everything in <span style="color:var(--method)">teal</span>
+      we can proxy from data or ground in the regulations. What is left —
+      <span style="color:var(--answer)">the coefficient <em>d</em></span> — is
+      tyre degradation. The counterfactual curve <code>D(a) = d·a + curvature·a&sup2;</code>
+      is just that coefficient integrated over tyre age.</p>
+    </div>
+  </header>
+
+  <section class="s" id="reframe">
+    <div class="col">
+      <p class="s__label">01 — the target</p>
+      <h2>What we estimate, versus what we measure</h2>
+      <p>The earlier note framed this as "lap time is a mixture". That is true, but
+      it buries the point. <strong>Degradation is the estimand</strong> — the
+      quantity we want a number for. Lap time is only the instrument we read it
+      through, the same way a thermometer's column length is not the temperature.</p>
+    </div>
+
+    <div class="flip reveal">
+      <div class="obs">
+        <h4>Observed</h4>
+        <p>Lap time per lap. Noisy, and moved by fuel, track state, temperature,
+        traffic and driver as much as by the tyre.</p>
+      </div>
+      <div class="arrow">&rarr;</div>
+      <div class="rec">
+        <h4>Recovered</h4>
+        <p>The degradation coefficient <em>d</em> in s/lap — how much pace the
+        tyre alone sheds per lap of age, for a given circuit, compound and
+        temperature.</p>
+      </div>
+    </div>
+
+    <div class="col">
+      <p>This reframing sets the whole plan. The deliverable is not a lap-time
+      predictor — it is a <strong>table of degradation coefficients</strong> and
+      the curve each one implies. Lap time comes back only at the end, to
+      reverse-validate: if the recovered <em>d</em> is right, it should predict
+      the pace of stints in races the model was never trained on.</p>
+      <div class="callout">
+        <p><strong>The course of the work:</strong> estimate <em>d</em>, then
+        estimate how <em>d</em> changes with circuit, with compound, and with
+        track temperature. Those coefficients are the product; the dashboard is
+        how you read them.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="s" id="estimator">
+    <div class="col">
+      <p class="s__label">02 — the method</p>
+      <h2>Inversion: solve the lap-time equation for the coefficient</h2>
+      <p>Within a single stint the estimator cannot work: tyre age and fuel load
+      are the same clock — both march up (or down) one unit per lap — so no
+      single stint can tell "tyre got slower" apart from "car got lighter". The
+      correlation between them inside one stint is essentially &minus;1.</p>
+    </div>
+
+    <figure class="reveal">
+      <img src="figures/deck_collinearity.png" alt="Left: single stints show tyre age and fuel load falling together in a perfectly straight line. Right: pooling 13 races spreads fuel load across a wide band at every tyre age.">
+      <figcaption><b>Left:</b> one stint — tyre age and fuel are locked together,
+      correlation &minus;1.00. <b>Right:</b> pool 13 races and a lap-2 stint sits
+      at a very different fuel load than a lap-34 stint at the same tyre age;
+      pooled correlation falls to &minus;0.41. <b>Pooling many races is what makes
+      <em>d</em> identifiable</b> — which is why the method needs a season of
+      data, not one Sunday.</figcaption>
+    </figure>
+
+    <div class="col">
+      <p>Pooled across all 10,381 laps, ordinary least squares can attribute the
+      variance. Circuit baselines are absorbed as fixed effects so <em>d</em> is
+      estimated purely from <em>within-race</em> variation. Then the counterfactual:
+      hold circuit, compound, fuel, track evolution and temperature fixed, sweep
+      only tyre age, and read off <code>D(a) = predicted(a) &minus; predicted(0)</code>.</p>
+      <p>A quick check that the inversion is doing something real — watch <em>d</em>
+      as each competing effect is moved out of its way:</p>
+    </div>
+
+    <figure class="reveal">
+      <img src="figures/deck_slope_progression.png" alt="Bar chart: the tyre-age coefficient starts strongly negative with tyre age alone and only turns positive after fuel and track evolution are added.">
+      <figcaption>The tyre-age coefficient by model. With tyre age alone it is
+      <b>&minus;0.17 s/lap</b> — tyres appear to get <em>faster</em> with age,
+      because fuel burn is masquerading as the tyre. Add circuit, compound,
+      temperature, track evolution and fuel and it resolves to
+      <b>+0.114 s/lap</b>. Fuel and track evolution account for the entire sign
+      flip.</figcaption>
+    </figure>
+  </section>
+
+  <section class="s" id="data">
+    <div class="col">
+      <p class="s__label">03 — the inputs</p>
+      <h2>What data we actually have to make the estimate</h2>
+      <p>One source, one build. <a href="https://docs.fastf1.dev/">FastF1</a>
+      pulls the official F1 timing feed and the F1 live weather stream (with
+      historical results via <a href="https://github.com/jolpica/jolpica-f1">Jolpica</a>,
+      the maintained successor to the Ergast API). We take race sessions from 13
+      Grands Prix across 2023–2024, keep only green-flag, dry, non-in/out laps,
+      remove per-stint lap-time outliers, and store the result as a single
+      Parquet file. Nothing downstream touches the network.</p>
+      <div class="rule-cite">
+        source · FastF1 v3 (docs.fastf1.dev) · F1 official timing &amp; weather
+        feeds · Jolpica-F1 / Ergast schema
+      </div>
+    </div>
+
+    <div class="tbl reveal">
+      <table>
+        <caption>per-lap fields used, and where each comes from</caption>
+        <thead><tr><th>Field</th><th>Source</th><th>Role in the estimator</th></tr></thead>
+        <tbody>
+          <tr><td>Lap time (+ 3 sector times)</td><td>timing feed</td><td class="">the instrument — left-hand side of the equation</td></tr>
+          <tr class="hi"><td>Compound, TyreLife, stint no.</td><td>FIA tyre data</td><td>the tyre state <em>d</em> multiplies</td></tr>
+          <tr><td>Track temp, air temp, humidity, wind, pressure, rainfall</td><td>F1 weather stream</td><td>thermal terms; rainfall used only to drop wet laps</td></tr>
+          <tr><td>Lap number, total laps</td><td>timing feed</td><td>drives the fuel-burn proxy</td></tr>
+          <tr><td>Track status, pit in/out</td><td>race control</td><td>lap filtering (green, racing laps only)</td></tr>
+          <tr><td>Position, speed-trap kph</td><td>timing feed</td><td>coarse dirty-air / traffic proxy</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col">
+      <h3>Proxies we derive (not measured)</h3>
+      <ul>
+        <li><strong>FuelKg</strong> — a linear burn from a full tank at lap 1 to
+        near-empty at the flag. A model, calibrated to the regulations below, not
+        a reading off the car.</li>
+        <li><strong>TrackEvoIdx</strong> — cumulative field-laps completed before
+        this lap, normalised 0→1, as a stand-in for the rubbering-in of the
+        surface.</li>
+        <li><strong>Thermal delta</strong> — track temp minus air temp.</li>
+      </ul>
+      <h3>What we do not have — and where it goes in the error term</h3>
+      <div class="cards">
+        <div><h4>Real fuel load</h4><p>Only the linear proxy. The estimator calibrates around it.</p></div>
+        <div><h4>Tyre pressures &amp; temps</h4><p>Blanket temps, running pressures, carcass temp — all unobserved.</p></div>
+        <div><h4>Compound sub-spec</h4><p>We see HARD/MEDIUM/SOFT, not which of Pirelli's C1–C5 that meant that weekend.</p></div>
+        <div><h4>ERS deployment</h4><p>No battery state or deploy maps.</p></div>
+        <div><h4>Exact gaps / dirty air</h4><p>Position is a blunt substitute until interval telemetry is loaded.</p></div>
+        <div><h4>Driver inputs</h4><p>Throttle, brake, steering traces not in this build (telemetry off for speed).</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="s" id="priors">
+    <div class="col">
+      <p class="s__label">04 — the grounding</p>
+      <h2>The priors we lean on come from the rulebook</h2>
+      <p>Two of the biggest non-tyre effects — fuel mass and why stints end where
+      they do — are pinned by regulation, not guessed.</p>
+
+      <h3>Fuel mass and its lap-time cost</h3>
+      <p>A car may carry at most <strong>110 kg of fuel</strong> for a race under
+      the current Technical Regulations; teams start lighter and burn down to
+      near-empty by the flag. The widely used engineering rule of thumb is that
+      each kilogram of fuel costs roughly <strong>0.03 s/lap</strong> — closer to
+      0.02 s/kg at fast, low-drag circuits and 0.04 s/kg at slow, brake-heavy
+      ones. Our build uses a 110 kg → 0 linear burn and the 0.03 s/kg figure as a
+      <em>prior</em>; the regression is then given only a lap-count proxy and
+      <strong>recovers 0.030 s/kg on its own</strong> — a 1.01 ratio to the
+      prior. The data reproduces a number we did not feed it.</p>
+      <div class="rule-cite">
+        FIA 2024 Formula 1 Technical Regulations — 110 kg maximum race fuel mass ·
+        fuel-effect rule of thumb: team strategy convention, ~0.02–0.04 s/kg by
+        circuit speed (<a href="https://themotorsportmetrics.com/fuel-load-and-lap-time/">motorsport-metrics</a>,
+        Autosport technical forum)
+      </div>
+
+      <h3>Tyre allocation — why stints are the length they are</h3>
+      <p>Each driver gets <strong>13 sets of dry tyres</strong> per event across
+      three nominated compounds (C1–C5 range), and <strong>must use at least two
+      different specifications</strong> during a dry race
+      (2024 Sporting Regulations, Art. 30.5). Stints therefore end for strategic
+      reasons — the mandatory second compound, the undercut, a safety car — not
+      only when the tyre is spent. That selection is a real bias: soft-tyre
+      stints in our data are cut short before the compound falls off the cliff,
+      which is why the raw per-compound coefficients below read counter-intuitively.</p>
+      <div class="rule-cite">
+        FIA 2024 Formula 1 Sporting Regulations, Art. 30.5 — 13 sets/event, three
+        compounds, two-specification race rule
+        (<a href="https://www.fia.com/sites/default/files/fia_2024_formula_1_sporting_regulations_-_issue_4_-_2024-02-13.pdf">fia.com</a>)
+      </div>
+
+      <h3>Why the coefficient will need re-fitting for 2026</h3>
+      <p>The 2026 rules cut race fuel to about <strong>70 kg</strong> of 100%
+      sustainable fuel, shift the power split toward ~50% electrical (350 kW
+      MGU-K), and bring a new Pirelli tyre generation on narrower rims. Every
+      term in the equation moves: lighter cars, a different fuel-burn curve, new
+      tyre construction. The method carries over; the fitted numbers do not.</p>
+      <div class="rule-cite">
+        F1 / FIA 2026 power-unit &amp; chassis regulations — ~70 kg sustainable
+        fuel, ~50% electrical power, new tyre spec
+        (<a href="https://www.formula1.com/en/latest/article/2026-regulations-explained-all-you-need-to-know-about-f1s-new-power-units.14jfv7a36905uDJDdNyfQd">formula1.com</a>)
+      </div>
+    </div>
+  </section>
+
+  <section class="s" id="result">
+    <div class="col">
+      <p class="s__label">05 — the reading</p>
+      <h2>The degradation coefficient, circuit by circuit</h2>
+      <p>Fit <em>d</em> separately for each circuit, with fuel, curvature, track
+      evolution and compound held around it. This is the core output — a number,
+      in seconds per lap, for how fast the tyre bleeds pace at each track.</p>
+    </div>
+
+    <figure class="reveal">
+      <img src="figures/deg_by_circuit.png" alt="Horizontal bars of the estimated degradation coefficient by circuit. Suzuka, Monza and Bahrain near 0.10 s/lap; Silverstone and Spain near 0.076; Jeddah and Monaco near 0.025.">
+      <figcaption>Estimated degradation coefficient <b>d</b> with 95% intervals.
+      The ordering falls out along circuit character, unprompted: high-energy
+      Suzuka, brake-heavy Monza and abrasive Bahrain at ~0.10 s/lap; the
+      low-energy street circuits Jeddah and Monaco at ~0.025. Circuits marked
+      "one season" appear in only 2024 and cannot be cross-checked against a
+      second year.</figcaption>
+    </figure>
+
+    <div class="col">
+      <div class="callout--m callout">
+        <p>The estimator was never told which circuits are abrasive or
+        high-energy. It recovered a 4&times; spread in degradation rate from lap
+        times alone, and the spread lines up with what tyre engineers already
+        know about these tracks. That agreement is the first sign the coefficient
+        is measuring the tyre and not an artefact.</p>
+      </div>
+
+      <h3>Per compound — and an honest caveat</h3>
+      <div class="tbl">
+        <table>
+          <caption>linear tyre-age coefficient by compound (all circuits pooled)</caption>
+          <thead><tr><th>Compound</th><th class="n">d (s/lap)</th><th>reading</th></tr></thead>
+          <tbody>
+            <tr><td>Hard</td><td class="n">+0.122</td><td>run long, so the full decay is visible</td></tr>
+            <tr><td>Medium</td><td class="n">+0.113</td><td>—</td></tr>
+            <tr><td>Soft</td><td class="n">+0.105</td><td>pitted early (Art. 30.5) — the cliff is cut off in the data</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Taken at face value this says softs degrade slowest, which is wrong. It
+      is the selection effect from the two-compound rule: soft stints end before
+      the compound collapses, so the data never sees their worst laps.
+      Per-compound coefficients need a stint-censoring correction — noted as a
+      known limitation, not reported as a finding.</p>
+    </div>
+  </section>
+
+  <section class="s" id="temp">
+    <div class="col">
+      <p class="s__label">06 — modulation</p>
+      <h2>How the coefficient moves with temperature</h2>
+      <p>Add one interaction term — tyre age &times; track temperature — and the
+      estimator returns how much hotter tarmac steepens degradation.</p>
+    </div>
+
+    <figure class="reveal">
+      <img src="figures/deg_temp_sensitivity.png" alt="Three degradation curves for cool, average and hot track temperature. The hot-track curve sits above the others, reaching about 2.1 s at 30 laps versus 1.8 s for the cool track.">
+      <figcaption>Same method, temperature-modulated coefficient.
+      <b>d moves +0.0004 s/lap for every &deg;C of track temperature</b>
+      (95% CI [+0.0001, +0.0008], p = 0.01) around a field-average of 33.7 &deg;C.
+      Small per degree, but a 24 &deg;C spread between a cold night race and a hot
+      afternoon is ~0.3 s of extra loss over a 25-lap stint.</figcaption>
+    </figure>
+
+    <div class="col">
+      <h3>Other weather terms the same fit returns</h3>
+      <div class="tbl">
+        <table>
+          <caption>weather coefficients on lap time (context-controlled OLS)</caption>
+          <thead><tr><th>Term</th><th class="n">Estimate</th><th class="n">95% CI</th><th>note</th></tr></thead>
+          <tbody>
+            <tr><td>Air temp</td><td class="n">+0.196 s/&deg;C</td><td class="n">[0.178, 0.215]</td><td>hotter air → less engine &amp; aero density → slower</td></tr>
+            <tr><td>Humidity</td><td class="n">+0.024 s/%</td><td class="n">[0.018, 0.030]</td><td>small, robust</td></tr>
+            <tr><td>Wind speed</td><td class="n">&minus;0.105 s/(km/h)</td><td class="n">[&minus;0.138, &minus;0.071]</td><td>direction-dependent; sign is circuit-specific</td></tr>
+            <tr><td>Track temp</td><td class="n">&minus;0.004 s/&deg;C</td><td class="n">[&minus;0.012, +0.004]</td><td>not separately identified once air temp is in</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Track and air temperature are strongly correlated, so the model cannot
+      cleanly split them — the honest statement is "the thermal environment costs
+      ~0.2 s/&deg;C and steepens tyre degradation slightly", not a precise
+      per-source breakdown.</p>
+    </div>
+  </section>
+
+  <section class="s" id="validate">
+    <div class="col">
+      <p class="s__label">07 — reverse validation</p>
+      <h2>Lap time comes back to check the estimate</h2>
+      <p>The test: refit with one whole race held out, predict that race's
+      degradation curve from the other twelve, and compare against the actual
+      fuel-corrected stint pace — the median over every fresh stint of that
+      compound.</p>
+    </div>
+
+    <figure class="reveal">
+      <img src="figures/deck_validation.png" alt="Two panels. Bahrain 2023 hard: predicted and actual degradation curves track within about 0.2 seconds. Spain 2023 medium: right shape but the prediction runs about 0.7 seconds high.">
+      <figcaption><b>Bahrain 2023, hard (held out):</b> the recovered curve tracks
+      the actual median within ~0.2 s. <b>Spain 2023, medium (held out):</b> right
+      shape, but a single field-wide rate runs ~0.7 s high on this
+      lower-degradation circuit.</figcaption>
+    </figure>
+
+    <div class="col">
+      <p>Honest read: a global coefficient gets the <em>shape</em> of degradation
+      right on unseen races and the <em>level</em> right where the circuit is
+      near the field average — and runs high on low-deg tracks. That is exactly
+      the argument for the per-circuit coefficients in section 05 as the next
+      iteration.</p>
+      <p>On raw held-out lap-time error the interpretable model is deliberately
+      modest — the context terms cut MAE ~6% (1.51 → 1.43 s), because lap-to-lap
+      scatter dominates absolute time. A flexible gradient-boosted model on the
+      same features, scored on circuit-normalised pace, cuts held-out error
+      <strong>43–47%</strong> versus the naive tyre-age model. The interpretable
+      model earns its place on <em>coefficients you can read</em>; the flexible
+      one confirms the signal is real and exploitable.</p>
+    </div>
+  </section>
+
+  <section class="s" id="dashboard">
+    <div class="col">
+      <p class="s__label">08 — the demo</p>
+      <h2>The dashboard runs on these coefficients</h2>
+      <p>The Streamlit app is the coefficient table made interactive. Every
+      control maps to a term in the equation:</p>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Control</th><th>What it changes</th></tr></thead>
+          <tbody>
+            <tr><td>Circuit</td><td>selects the per-circuit baseline and degradation coefficient <em>d</em></td></tr>
+            <tr><td>Compound</td><td>selects the compound offset</td></tr>
+            <tr><td>Track temperature</td><td>applies the temperature modulation of <em>d</em> (section 06)</td></tr>
+            <tr><td>Tyre age</td><td>the sweep variable — reads <code>D(a)</code> off the counterfactual curve</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The output is a single number — <em>tyre penalty at this age</em>, in
+      seconds versus a fresh tyre in identical conditions — plus the full curve.
+      Same inversion as this document, wrapped in four sliders.</p>
+      <pre>python -m src.build_dataset      # FastF1 -> data/stints.parquet   (once, networked)
+python -m src.regression         # the OLS pace model + fuel-prior check
+python -m src.degradation        # per-circuit + temperature coefficients, the two figures
+python -m src.deck_figures       # the narrative figures
+streamlit run app.py             # the dashboard</pre>
+    </div>
+  </section>
+
+  <section class="s" id="enables">
+    <div class="col">
+      <p class="s__label">09 — what it's for</p>
+      <h2>From "how fast?" to "why?"</h2>
+      <p class="lede">Once degradation is a number you can read per circuit,
+      compound and temperature:</p>
+      <div class="cards">
+        <div><h4>Tyre intelligence</h4><p>How much performance has this tyre actually lost, right now?</p></div>
+        <div><h4>Degradation forecasting</h4><p>Given the coefficient and the curvature, how quickly will it lose more?</p></div>
+        <div><h4>Race strategy</h4><p>When does the accumulating cost of staying out exceed the ~20 s of a pit stop?</p></div>
+        <div><h4>Driver &amp; car analysis</h4><p>Is a stint's pace loss the tyre, or is it operational?</p></div>
+        <div><h4>Condition analysis</h4><p>How does a compound respond as the track heats through an afternoon?</p></div>
+        <div><h4>Post-race review</h4><p>Predicted coefficient versus what the stint actually did.</p></div>
+      </div>
+    </div>
+
+    <div class="col">
+      <h3>Where the method goes next</h3>
+      <ul>
+        <li><strong>Per-circuit &amp; censoring-corrected compound coefficients</strong>
+        as the standard output, not a single global rate.</li>
+        <li><strong>Load real telemetry</strong> — gaps for dirty air, throttle
+        traces for driver management, so those effects leave the noise term.</li>
+        <li><strong>Temporal models</strong> (LSTM/GRU) for within-stint tyre
+        state, then multimodal signals (onboard video: visible locking, sliding)
+        and physics-informed constraints so the curve obeys known tyre behaviour.
+        The extension, not the initial claim.</li>
+      </ul>
+
+      <h3>Limitations, stated plainly</h3>
+      <ul>
+        <li><code>FuelKg</code> is a lap-count proxy calibrated to a published
+        rule of thumb, not a measurement.</li>
+        <li>Per-compound coefficients carry the two-compound-rule selection bias
+        (section 05).</li>
+        <li>Jeddah, Monaco and Las Vegas appear in one season only — their
+        coefficients cannot be cross-validated yet.</li>
+        <li>Track evolution and thermal terms are only partly identified; their
+        effect on <em>d</em> is real but their point estimates are soft.</li>
+        <li>A global coefficient over-predicts degradation on low-deg circuits
+        until per-circuit slopes are the default.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <p>TRUEDEG · degradation-estimation companion note · TrackShift '26</p>
+    <p>All figures and coefficients reproduced from 13 races (2023–2024), 10,381
+    green dry racing laps, via <code>src/regression.py</code>,
+    <code>src/degradation.py</code>, <code>src/deck_figures.py</code>.</p>
+    <p>Sources</p>
+    <ol>
+      <li>FastF1 — F1 timing &amp; telemetry access library. <a href="https://docs.fastf1.dev/">docs.fastf1.dev</a></li>
+      <li>Jolpica-F1 — maintained successor to the Ergast F1 result API. <a href="https://github.com/jolpica/jolpica-f1">github.com/jolpica/jolpica-f1</a></li>
+      <li>FIA 2024 Formula 1 Sporting Regulations, Issue 4 (Art. 30.5, tyre allocation). <a href="https://www.fia.com/sites/default/files/fia_2024_formula_1_sporting_regulations_-_issue_4_-_2024-02-13.pdf">fia.com</a></li>
+      <li>FIA 2024 Formula 1 Technical Regulations (110 kg maximum race fuel mass). <a href="https://www.fia.com/regulation/category/110">fia.com/regulation</a></li>
+      <li>2026 F1 power-unit &amp; chassis regulations — sustainable fuel, ~70 kg race fuel, ~50% electrical power. <a href="https://www.formula1.com/en/latest/article/2026-regulations-explained-all-you-need-to-know-about-f1s-new-power-units.14jfv7a36905uDJDdNyfQd">formula1.com</a></li>
+      <li>Fuel-load vs lap-time rule of thumb (~0.02–0.04 s/kg by circuit speed). <a href="https://themotorsportmetrics.com/fuel-load-and-lap-time/">themotorsportmetrics.com</a>; Autosport Technical Forum archive.</li>
+    </ol>
+  </footer>
+
+</main>
+
+<script>
+  (function () {
+    var pr = document.getElementById("progress");
+    function onScroll() {
+      var h = document.documentElement;
+      var max = h.scrollHeight - h.clientHeight;
+      pr.style.setProperty("--p", (max > 0 ? (h.scrollTop / max) * 100 : 0).toFixed(1) + "%");
+    }
+    document.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches && "IntersectionObserver" in window) {
+      var io = new IntersectionObserver(function (es) {
+        es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+      }, { rootMargin: "0px 0px -8% 0px" });
+      document.querySelectorAll(".reveal").forEach(function (el) { io.observe(el); });
+    } else {
+      document.querySelectorAll(".reveal").forEach(function (el) { el.classList.add("in"); });
+    }
+  })();
+</script>

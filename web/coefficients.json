@@ -1,0 +1,174 @@
+{
+  "circuits": {
+    "Suzuka": 0.1094,
+    "Monza": 0.1033,
+    "Bahrain": 0.0956,
+    "Las Vegas": 0.0846,
+    "Silverstone": 0.0765,
+    "Spain": 0.0752,
+    "Jeddah": 0.0274,
+    "Monaco": 0.022
+  },
+  "ci": {
+    "Suzuka": [
+      0.097,
+      0.1217
+    ],
+    "Monza": [
+      0.0912,
+      0.1153
+    ],
+    "Bahrain": [
+      0.0842,
+      0.1071
+    ],
+    "Las Vegas": [
+      0.0705,
+      0.0988
+    ],
+    "Silverstone": [
+      0.0642,
+      0.0889
+    ],
+    "Spain": [
+      0.0642,
+      0.0863
+    ],
+    "Jeddah": [
+      0.0125,
+      0.0423
+    ],
+    "Monaco": [
+      0.006,
+      0.0379
+    ]
+  },
+  "circuit_note": {
+    "Suzuka": "fast, high-energy corners",
+    "Monza": "low downforce, heavy braking",
+    "Bahrain": "abrasive surface, hot",
+    "Las Vegas": "cold night, long straights",
+    "Silverstone": "fast, cool, flowing",
+    "Spain": "sustained-load corners",
+    "Jeddah": "smooth street, low abrasion",
+    "Monaco": "lowest energy, management race"
+  },
+  "curvature": -0.00165,
+  "temp_slope_per_degC": 0.00042,
+  "mean_track_temp": 33.7,
+  "compound_mult": {
+    "HARD": 1.022,
+    "MEDIUM": 1.0,
+    "SOFT": 1.108
+  },
+  "meta": {
+    "Bahrain": {
+      "tt_typ": 24,
+      "tt_lo": 21,
+      "tt_hi": 31,
+      "compounds": [
+        "HARD",
+        "MEDIUM",
+        "SOFT"
+      ],
+      "paired": true,
+      "year": "2023-24",
+      "maxage": 24
+    },
+    "Jeddah": {
+      "tt_typ": 31,
+      "tt_lo": 30,
+      "tt_hi": 32,
+      "compounds": [
+        "HARD",
+        "MEDIUM",
+        "SOFT"
+      ],
+      "paired": false,
+      "year": "2024",
+      "maxage": 35
+    },
+    "Las Vegas": {
+      "tt_typ": 17,
+      "tt_lo": 16,
+      "tt_hi": 19,
+      "compounds": [
+        "HARD",
+        "MEDIUM"
+      ],
+      "paired": false,
+      "year": "2024",
+      "maxage": 26
+    },
+    "Monaco": {
+      "tt_typ": 46,
+      "tt_lo": 40,
+      "tt_hi": 49,
+      "compounds": [
+        "HARD",
+        "MEDIUM",
+        "SOFT"
+      ],
+      "paired": false,
+      "year": "2024",
+      "maxage": 35
+    },
+    "Monza": {
+      "tt_typ": 44,
+      "tt_lo": 41,
+      "tt_hi": 51,
+      "compounds": [
+        "HARD",
+        "MEDIUM"
+      ],
+      "paired": true,
+      "year": "2023-24",
+      "maxage": 34
+    },
+    "Silverstone": {
+      "tt_typ": 29,
+      "tt_lo": 24,
+      "tt_hi": 33,
+      "compounds": [
+        "HARD",
+        "MEDIUM",
+        "SOFT"
+      ],
+      "paired": true,
+      "year": "2023-24",
+      "maxage": 29
+    },
+    "Spain": {
+      "tt_typ": 33,
+      "tt_lo": 27,
+      "tt_hi": 43,
+      "compounds": [
+        "HARD",
+        "MEDIUM",
+        "SOFT"
+      ],
+      "paired": true,
+      "year": "2023-24",
+      "maxage": 29
+    },
+    "Suzuka": {
+      "tt_typ": 37,
+      "tt_lo": 31,
+      "tt_hi": 44,
+      "compounds": [
+        "HARD",
+        "MEDIUM",
+        "SOFT"
+      ],
+      "paired": true,
+      "year": "2023-24",
+      "maxage": 26
+    }
+  },
+  "n_laps": 10381,
+  "fuel_s_per_kg": {
+    "prior": 0.03,
+    "recovered": 0.0302
+  },
+  "formula": "D(a) = (d_circuit + temp_slope*(trackTemp - circuit_typical_temp)) * compound_mult * a  +  curvature * a^2"
+}

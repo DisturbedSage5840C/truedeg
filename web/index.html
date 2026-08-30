@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TrueDeg</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Counterfactual F1 tyre-degradation estimation — the method note, the idea deck, and a live degradation-curve dashboard.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --paper:#f2f4f5; --surface:#ffffff; --surface-2:#e8ecee;
+    --ink:#14181b; --ink-soft:#46505a; --ink-faint:#6f7a83;
+    --rule:#d7dde0; --rule-strong:#bfc8cc;
+    --method:#1f7a8c; --method-wash:#e0eef1;
+    --answer:#c1462b; --answer-wash:#f6e6e1; --answer-ink:#a3371f;
+    --shadow:0 1px 2px rgba(15,20,25,.05), 0 10px 30px rgba(15,20,25,.07);
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --paper:#0e1113; --surface:#161a1d; --surface-2:#1d2226;
+    --ink:#e6e9ea; --ink-soft:#a9b2b8; --ink-faint:#79838a;
+    --rule:#282f33; --rule-strong:#3a4247;
+    --method:#52b9cb; --method-wash:#123037;
+    --answer:#ef6a4c; --answer-wash:#2b1712; --answer-ink:#f2856b;
+    --shadow:0 1px 2px rgba(0,0,0,.32), 0 12px 36px rgba(0,0,0,.46);
+  }}
+  :root[data-theme="dark"]{
+    --paper:#0e1113; --surface:#161a1d; --surface-2:#1d2226;
+    --ink:#e6e9ea; --ink-soft:#a9b2b8; --ink-faint:#79838a;
+    --rule:#282f33; --rule-strong:#3a4247;
+    --method:#52b9cb; --method-wash:#123037;
+    --answer:#ef6a4c; --answer-wash:#2b1712; --answer-ink:#f2856b;
+    --shadow:0 1px 2px rgba(0,0,0,.32), 0 12px 36px rgba(0,0,0,.46);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:"Source Serif 4",Georgia,serif;font-size:1.06rem;line-height:1.66;
+    -webkit-font-smoothing:antialiased}
+  a{color:var(--method)}
+  main{max-width:52rem;margin:0 auto;padding:5rem 1.6rem 6rem}
+  .kick{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.74rem;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 1.3rem}
+  h1{font-family:"Archivo",system-ui,sans-serif;font-weight:700;
+    font-size:clamp(2.2rem,6vw,3.4rem);line-height:1.03;margin:0 0 1rem;
+    letter-spacing:-.015em;text-wrap:balance}
+  h1 .a{color:var(--answer)}
+  .lede{font-size:1.18rem;color:var(--ink-soft);max-width:38rem;margin:0 0 1rem}
+  .eq{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.82rem;
+    color:var(--ink-faint);background:var(--surface-2);border:1px solid var(--rule);
+    border-radius:5px;padding:.7rem .9rem;margin:1.8rem 0 3rem;overflow-x:auto;white-space:nowrap}
+  .eq b{color:var(--answer);font-weight:500}
+  .cards{display:grid;gap:1rem;grid-template-columns:1fr}
+  @media (min-width:640px){.cards{grid-template-columns:1fr 1fr}
+    .cards a.lead{grid-column:1 / -1}}
+  a.card{display:block;text-decoration:none;color:inherit;background:var(--surface);
+    border:1px solid var(--rule);border-radius:7px;padding:1.3rem 1.4rem;
+    box-shadow:var(--shadow);transition:transform .12s ease,border-color .12s ease}
+  a.card:hover{transform:translateY(-2px);border-color:var(--method)}
+  @media (prefers-reduced-motion:reduce){a.card:hover{transform:none}}
+  a.card .t{font-family:"Archivo",system-ui,sans-serif;font-weight:600;font-size:1.15rem;
+    margin:0 0 .3rem;display:flex;align-items:baseline;gap:.5rem}
+  a.card.lead .t{font-size:1.35rem}
+  a.card .tag{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.6rem;
+    letter-spacing:.1em;text-transform:uppercase;padding:.15rem .4rem;border-radius:3px;
+    background:var(--answer-wash);color:var(--answer-ink)}
+  a.card.lead .tag{background:var(--method-wash);color:var(--method)}
+  a.card p{margin:0;font-size:.95rem;color:var(--ink-soft)}
+  a.card .go{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.72rem;
+    color:var(--method);margin-top:.7rem;display:block}
+  .meta{margin-top:3rem;font-family:"JetBrains Mono",ui-monospace,monospace;
+    font-size:.74rem;color:var(--ink-faint);line-height:1.8;
+    border-top:1px solid var(--rule);padding-top:1.4rem}
+  .meta b{color:var(--ink-soft);font-weight:500}
+  :focus-visible{outline:2px solid var(--method);outline-offset:3px;border-radius:3px}
+</style>
+</head>
+<body>
+<main>
+  <p class="kick">Trackshift · counterfactual tyre modelling</p>
+  <h1>TrueDeg — reading tyre <span class="a">degradation</span> off lap time</h1>
+  <p class="lede">Within one stint, tyre age and fuel load move together almost
+  perfectly, so a raw "lap time vs tyre age" line means nothing. TrueDeg pools
+  13&nbsp;races, models lap time from tyre age <em>plus context</em>, then inverts
+  for the one thing it actually wants: the degradation coefficient.</p>
+  <div class="eq">lap time = circuit baseline + <b>d</b> × tyre age + curvature × age² + fuel + track evolution + thermal &nbsp;→&nbsp; solve for <b>d</b></div>
+
+  <div class="cards">
+    <a class="card lead" href="dashboard.html">
+      <span class="t">Live dashboard <span class="tag">interactive</span></span>
+      <p>Pick a circuit, compound, track temperature and tyre age. The degradation
+      curve is recomputed in your browser from the fitted coefficients — the
+      Streamlit demo as a static page.</p>
+      <span class="go">open the dashboard →</span>
+    </a>
+
+    <a class="card" href="degradation-estimation.html">
+      <span class="t">Method note</span>
+      <p>The coefficient as the estimand, lap time as the instrument. Data
+      inventory, regulation grounding (fuel mass, tyre allocation, 2026), per-circuit
+      and temperature-modulated coefficients, reverse validation.</p>
+      <span class="go">read the note →</span>
+    </a>
+
+    <a class="card" href="idea-submission.html">
+      <span class="t">Idea deck</span>
+      <p>The eleven-slide pitch: why single-stint degradation curves are
+      unidentifiable, how pooling fixes it, and what a trustworthy degradation
+      estimate unlocks for strategy.</p>
+      <span class="go">view the deck →</span>
+    </a>
+  </div>
+
+  <p class="meta">
+    <b>data</b> &nbsp; FastF1 official timing + weather feeds · 13 races, 2023–24 · 10,381 green dry laps<br>
+    <b>method</b> &nbsp; pooled OLS pace model (statsmodels), context held fixed, TyreLife swept<br>
+    <b>headline</b> &nbsp; per-circuit d ranges 0.022 s/lap (Monaco) to 0.109 s/lap (Suzuka) — a 4× spread the model was never told to expect<br>
+    <b>source</b> &nbsp; <a href="https://github.com/DisturbedSage5840C/Trackshift">github.com/DisturbedSage5840C/Trackshift</a>
+  </p>
+</main>
+</body>
+</html>

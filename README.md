@@ -53,6 +53,20 @@ python3.12 -m venv .venv
 | `docs/idea-submission.md` | The 11-slide idea-submission document (HTML artifact alongside) |
 | `docs/degradation-estimation.html` | Companion note: degradation coefficient as the estimand, data + regs grounding |
 | `app.py` | Streamlit live-slider demo |
+| `web/` | Static site (Vercel): landing page, both docs, and `dashboard.html` — the demo curve recomputed client-side from `web/coefficients.json` |
+
+## Static site
+
+`web/` is a zero-config static deploy. `web/dashboard.html` reproduces the
+Streamlit demo's four controls (circuit / compound / track temp / tyre age) and
+recomputes `D(a)` in the browser from the fitted coefficients in
+`web/coefficients.json` (regenerate those from `src.regression` + `src.degradation`).
+
+```bash
+cd web && vercel deploy --prod
+```
+
+Live: <https://web-indol-nine-52.vercel.app>
 
 ## Caveats to state in the deck
 
