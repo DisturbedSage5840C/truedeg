@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Inchident</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Counterfactual F1 tyre-degradation estimation — the method note, the idea deck, and a live degradation-curve dashboard.">
+<meta name="description" content="Counterfactual F1 tyre-degradation estimation: a method note, an idea deck, and a live degradation-curve dashboard.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -78,35 +78,36 @@
 <body>
 <main>
   <p class="kick">Trackshift · counterfactual tyre modelling</p>
-  <h1>Inchident — reading tyre <span class="a">degradation</span> off lap time</h1>
+  <h1>Inchident: reading tyre <span class="a">degradation</span> off lap time</h1>
   <p class="lede">Within one stint, tyre age and fuel load move together almost
-  perfectly, so a raw "lap time vs tyre age" line means nothing. Inchident pools
-  13&nbsp;races, models lap time from tyre age <em>plus context</em>, then inverts
-  for the one thing it actually wants: the degradation coefficient.</p>
+  perfectly, so a raw "lap time vs tyre age" line tells you very little. Inchident
+  pools 13&nbsp;races, models lap time from tyre age <em>plus context</em>, and then
+  inverts that model to recover the degradation coefficient.</p>
   <div class="eq">lap time = circuit baseline + <b>d</b> × tyre age + curvature × age² + fuel + track evolution + thermal &nbsp;→&nbsp; solve for <b>d</b></div>
 
   <div class="cards">
     <a class="card lead" href="dashboard.html">
       <span class="t">Live dashboard <span class="tag">interactive</span></span>
       <p>Pick a circuit, compound, track temperature and tyre age. The degradation
-      curve is recomputed in your browser from the fitted coefficients — the
-      Streamlit demo as a static page.</p>
+      curve is recomputed in your browser from the fitted coefficients. It is the
+      Streamlit demo rebuilt as a static page.</p>
       <span class="go">open the dashboard →</span>
     </a>
 
     <a class="card" href="degradation-estimation.html">
       <span class="t">Method note</span>
-      <p>The coefficient as the estimand, lap time as the instrument. Data
-      inventory, regulation grounding (fuel mass, tyre allocation, 2026), per-circuit
-      and temperature-modulated coefficients, reverse validation.</p>
+      <p>Treats the coefficient as the estimand and lap time as the instrument.
+      Covers the data inventory, the regulation grounding (fuel mass, tyre
+      allocation, 2026), the per-circuit and temperature-modulated coefficients,
+      and the reverse validation.</p>
       <span class="go">read the note →</span>
     </a>
 
     <a class="card" href="idea-submission.html">
       <span class="t">Idea deck</span>
-      <p>The eleven-slide pitch: why single-stint degradation curves are
-      unidentifiable, how pooling fixes it, and what a trustworthy degradation
-      estimate unlocks for strategy.</p>
+      <p>The eleven-slide pitch: why a single stint can't identify a degradation
+      curve, how pooling races fixes that, and what a strategist can do once the
+      estimate is trustworthy.</p>
       <span class="go">view the deck →</span>
     </a>
   </div>
@@ -114,7 +115,7 @@
   <p class="meta">
     <b>data</b> &nbsp; FastF1 official timing + weather feeds · 13 races, 2023–24 · 10,381 green dry laps<br>
     <b>method</b> &nbsp; pooled OLS pace model (statsmodels), context held fixed, TyreLife swept<br>
-    <b>headline</b> &nbsp; per-circuit d ranges 0.022 s/lap (Monaco) to 0.109 s/lap (Suzuka) — a 4× spread the model was never told to expect<br>
+    <b>headline</b> &nbsp; per-circuit d ranges from 0.022 s/lap (Monaco) to 0.109 s/lap (Suzuka), a 4× spread the model was never told to expect<br>
     <b>source</b> &nbsp; <a href="https://github.com/DisturbedSage5840C/inchident">github.com/DisturbedSage5840C/inchident</a>
   </p>
 </main>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Inchident Console</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Live degradation console — pick circuit, compound, track temperature and tyre age; the counterfactual degradation curve and coefficients are recomputed in-browser from a model fitted on 13 F1 races.">
+<meta name="description" content="Live degradation console. Pick circuit, compound, track temperature and tyre age; the counterfactual degradation curve and coefficients are recomputed in-browser from a model fitted on 13 F1 races.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
@@ -330,7 +330,7 @@
           <div class="flipbox" id="flip"></div>
           <div class="alert">
             <span class="mk">▲</span>
-            <span class="tx" id="alert-tx">SOFT coefficient carries selection bias — softs are pitted before the cliff (FIA Art. 30.5).</span>
+            <span class="tx" id="alert-tx">SOFT coefficient carries selection bias: softs are pitted before the cliff (FIA Art. 30.5).</span>
             <span class="rt">ART 30.5</span>
           </div>
         </div>
@@ -441,7 +441,7 @@ function drawChart(circuit, compound, temp, age){
   g.appendChild(el("circle", {cx:px, cy:py, r:4.5, fill:"var(--red)"}));
   svg.appendChild(g);
 
-  // naive annotation — sit it just above where the age-only line dives off the floor
+  // naive annotation: sit it just above where the age-only line dives off the floor
   const naiveExit = Math.min(maxAge, yMin / naive);
   svg.appendChild(el("text", {x:x(naiveExit)+8, y:y(yMin)-6, class:"ax", fill:"rgba(255,255,255,.34)", "text-anchor":"start"}, "age-only fit: −0.170 s/lap ↘"));
 }
@@ -511,8 +511,8 @@ function render(){
   $("chart-meta").textContent = `${compound} · ${circuit} · track ${temp}°C · age ${age} · ${m.year}${m.paired ? "" : " · 1 season"}`;
   $("prov").textContent = `${COEF.n_races} races · ${m.year === "2024" ? "2024 only" : "2023–24"} · ${COEF.n_laps.toLocaleString()} laps · FastF1`;
   $("alert-tx").textContent = compound === "SOFT"
-    ? "SOFT coefficient carries selection bias — softs are pitted before the cliff (FIA Art. 30.5)."
-    : (m.paired ? "Two-season fit — coefficient cross-validates across 2023 and 2024." : "Single-season circuit — coefficient cannot be cross-validated across years.");
+    ? "SOFT coefficient carries selection bias: softs are pitted before the cliff (FIA Art. 30.5)."
+    : (m.paired ? "Two-season fit, so the coefficient cross-validates across 2023 and 2024." : "Single-season circuit, so the coefficient cannot be cross-validated across years.");
 
   drawChart(circuit, compound, temp, age);
   drawBars(circuit);
