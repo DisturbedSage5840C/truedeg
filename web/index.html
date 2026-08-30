@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>TrueDeg</title>
+<title>Inchident</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Counterfactual F1 tyre-degradation estimation — the method note, the idea deck, and a live degradation-curve dashboard.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -78,9 +78,9 @@
 <body>
 <main>
   <p class="kick">Trackshift · counterfactual tyre modelling</p>
-  <h1>TrueDeg — reading tyre <span class="a">degradation</span> off lap time</h1>
+  <h1>Inchident — reading tyre <span class="a">degradation</span> off lap time</h1>
   <p class="lede">Within one stint, tyre age and fuel load move together almost
-  perfectly, so a raw "lap time vs tyre age" line means nothing. TrueDeg pools
+  perfectly, so a raw "lap time vs tyre age" line means nothing. Inchident pools
   13&nbsp;races, models lap time from tyre age <em>plus context</em>, then inverts
   for the one thing it actually wants: the degradation coefficient.</p>
   <div class="eq">lap time = circuit baseline + <b>d</b> × tyre age + curvature × age² + fuel + track evolution + thermal &nbsp;→&nbsp; solve for <b>d</b></div>
@@ -115,7 +115,7 @@
     <b>data</b> &nbsp; FastF1 official timing + weather feeds · 13 races, 2023–24 · 10,381 green dry laps<br>
     <b>method</b> &nbsp; pooled OLS pace model (statsmodels), context held fixed, TyreLife swept<br>
     <b>headline</b> &nbsp; per-circuit d ranges 0.022 s/lap (Monaco) to 0.109 s/lap (Suzuka) — a 4× spread the model was never told to expect<br>
-    <b>source</b> &nbsp; <a href="https://github.com/DisturbedSage5840C/Trackshift">github.com/DisturbedSage5840C/Trackshift</a>
+    <b>source</b> &nbsp; <a href="https://github.com/DisturbedSage5840C/inchident">github.com/DisturbedSage5840C/inchident</a>
   </p>
 </main>
 </body>

@@ -1,4 +1,4 @@
-"""Model 0 (naive) vs Model 1 (context-aware), and the first TrueDeg curve.
+"""Model 0 (naive) vs Model 1 (context-aware), and the first Inchident curve.
 
     python -m src.model
 
@@ -106,7 +106,7 @@ def fit_full(df, num=CONTEXT_NUM, cats=CONTEXT_CATS):
     return m, X
 
 
-def truedeg_curve(model, X, context_row, cats=CONTEXT_CATS, max_age=25):
+def inchident_curve(model, X, context_row, cats=CONTEXT_CATS, max_age=25):
     """THE counterfactual sweep: hold everything fixed, vary only TyreLife.
 
     Returns (ages, D) where D(a) = P_a - P_0.
@@ -150,26 +150,26 @@ def main():
     stint = dev_i[dev_i.StintId == sid].sort_values("TyreLife")
     ctx = X.loc[stint.index[0]].to_dict()
 
-    ages, deg = truedeg_curve(model, X, ctx)
+    ages, deg = inchident_curve(model, X, ctx)
     # observed reference: fuel-corrected pace vs the mean of the first 3 laps
     base = stint["FuelCorrectedS"].head(3).mean()
     obs = stint["FuelCorrectedS"] - base
 
     fig, ax = plt.subplots(figsize=(7.5, 5))
     ax.plot(ages, deg, lw=2.5,
-            label="TrueDeg predicted degradation (counterfactual)")
+            label="Inchident predicted degradation (counterfactual)")
     ax.scatter(stint["TyreLife"], obs, s=22, alpha=.7, color="crimson",
                label="Actual observed (fuel-corrected)")
     ax.axhline(0, color="k", lw=.8)
     ax.set_xlabel("Tyre age (laps)")
     ax.set_ylabel("Pace loss vs fresh tyre (s)")
     ax.set_ylim(min(-0.6, deg.min() - 0.3), max(deg.max(), obs.quantile(.95)) + 0.4)
-    ax.set_title(f"First TrueDeg curve -- {sid}")
+    ax.set_title(f"First Inchident curve -- {sid}")
     ax.legend()
     fig.tight_layout()
-    fig.savefig("figures/truedeg_curve_vs_actual.png", dpi=160)
+    fig.savefig("figures/inchident_curve_vs_actual.png", dpi=160)
     plt.close(fig)
-    print("\nwrote figures/truedeg_curve_vs_actual.png")
+    print("\nwrote figures/inchident_curve_vs_actual.png")
 
     table = pd.DataFrame([
         {"model": "Model 0 (tyre age + compound)",

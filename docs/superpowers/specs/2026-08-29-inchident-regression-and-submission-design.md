@@ -1,11 +1,11 @@
-# TrueDeg — Interpretable Regression + Idea-Submission Document
+# Inchident — Interpretable Regression + Idea-Submission Document
 
 **Date:** 2026-08-29
 **Status:** Approved (brainstorming)
 
 ## Goal
 
-Add an interpretable linear-regression layer to the existing TrueDeg pipeline
+Add an interpretable linear-regression layer to the existing Inchident pipeline
 and produce an idea-submission document (Markdown + HTML artifact) that walks
 the reader from the naive "tyre age → degradation" intuition, through real F1
 data that breaks it, to a counterfactual regression estimate of true tyre
@@ -64,7 +64,7 @@ Public functions:
   (Event kept so both models are scored on the same target scale; the naive one
   just lacks the physics covariates).
 - `coefficient_table(results) -> pd.DataFrame` — term, estimate, 95% CI, p.
-- `truedeg_curve(results, context_row, max_age=25) -> (ages, penalty)` —
+- `inchident_curve(results, context_row, max_age=25) -> (ages, penalty)` —
   counterfactual: sweep TyreLife, hold everything else fixed,
   `penalty(a) = predicted(a) - predicted(0)`.
 - `groupkfold_mae(df, fit_fn, k=5) -> float` — MAE by RaceId folds.
@@ -87,8 +87,8 @@ Generates the narrative figures into `figures/`. Reads
 | `deck_raw_pace.png` | 3 | Bahrain 2023: `PaceVsRaceMedian` per lap for ~4 representative fresh stints, coloured by stint, x = tyre age. Shows pace falling mid-stint as the tyre ages, and stint-to-stint inconsistency. |
 | `deck_collinearity.png` | 4-5 | Bar / annotated plot: `corr(TyreLife, FuelKg)` within-stint (median over stints, ≈−0.99) vs pooled across all laps (≈−0.3). |
 | `deck_decomposition.png` | 7 | One long Bahrain 2023 stint: observed pace vs start-of-stint, decomposed into fuel (from the fitted `FuelKg` coef), track-evo, and tyre-deg components (stacked area or lines). |
-| `deck_naive_vs_context.png` | 8 | Left: raw `PaceVsRaceMedian` binned by tyre age, pooled (flat / noisy / near-zero slope). Right: regression counterfactual TrueDeg curve (clean, rising). Shared y-axis. |
-| `deck_validation.png` | 9 | 2 panels (Bahrain 2023, Spain 2023): predicted TrueDeg curve from a model fit on the *other 12 races* vs the featured stint's actual fuel-corrected pace (re-centred on first 3 laps). |
+| `deck_naive_vs_context.png` | 8 | Left: raw `PaceVsRaceMedian` binned by tyre age, pooled (flat / noisy / near-zero slope). Right: regression counterfactual Inchident curve (clean, rising). Shared y-axis. |
+| `deck_validation.png` | 9 | 2 panels (Bahrain 2023, Spain 2023): predicted Inchident curve from a model fit on the *other 12 races* vs the featured stint's actual fuel-corrected pace (re-centred on first 3 laps). |
 | `deck_coefficients.png` | 7 | Coefficient plot (point + 95% CI) for TyreLife, TyreLife^2, FuelKg, TrackEvoIdx, TrackTemp. Written by `regression.py`. |
 
 Featured stints: pick the longest `FreshStint` MEDIUM (Spain) / HARD (Bahrain,

@@ -1,0 +1,10 @@
+{
+  "description": "INCHIDENT offers advanced data analytics for Formula 1 teams, providing real-time telemetry insights and strategic metrics to enhance race performance.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

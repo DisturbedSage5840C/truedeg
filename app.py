@@ -8,10 +8,10 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from src.features import load_features
-from src.model import fit_full, truedeg_curve
+from src.model import fit_full, inchident_curve
 
-st.set_page_config(page_title="TrueDeg", layout="centered")
-st.title("TrueDeg -- counterfactual tyre degradation")
+st.set_page_config(page_title="Inchident", layout="centered")
+st.title("Inchident -- counterfactual tyre degradation")
 
 
 @st.cache_resource
@@ -36,7 +36,7 @@ if not mask.any():
 
 row = X[mask].iloc[0].to_dict()
 row["TrackTemp"] = temp
-ages, deg = truedeg_curve(model, X, row)
+ages, deg = inchident_curve(model, X, row)
 
 st.metric(
     "Tyre penalty at this age", f"{deg[age]:+.2f} s",

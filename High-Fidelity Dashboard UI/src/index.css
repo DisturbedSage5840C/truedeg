@@ -1,0 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+@import 'tailwindcss';
+
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+
+* {
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
+
+:root {
+  --bg: #090909;
+  --surface: #0f0f10;
+  --panel: #141415;
+  --panel-raised: #1a1a1b;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-mid: rgba(255, 255, 255, 0.12);
+  --text-primary: #efefef;
+  --text-secondary: #888;
+  --text-muted: #444;
+  --text-label: #666;
+  --red: #e8002d;
+  --red-dim: rgba(232, 0, 45, 0.18);
+  --red-mid: rgba(232, 0, 45, 0.45);
+  --mono: 'JetBrains Mono', monospace;
+  --condensed: 'Barlow Condensed', sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--condensed);
+  font-feature-settings: 'ss01', 'ss02';
+  -webkit-font-smoothing: antialiased;
+}

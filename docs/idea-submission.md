@@ -1,4 +1,4 @@
-# TRUEDEG
+# INCHIDENT
 
 ### Estimating True F1 Tyre Degradation from Lap Performance
 
@@ -145,7 +145,7 @@ as framing for what the model must adapt to, not as the project itself.
 
 ---
 
-## Slide 7 — From observed performance to TrueDeg
+## Slide 7 — From observed performance to Inchident
 
 **Step 1 — Learn observed pace.** Fit lap time from tyre state, a fuel proxy,
 track evolution, weather, compound and circuit. In the first version this is a
@@ -185,7 +185,7 @@ Tyre penalty(N) = Predicted pace(N) - Predicted pace(0)
 ```
 
 This difference is our estimate of tyre-induced performance loss. It is the core
-of TrueDeg.
+of Inchident.
 
 ![One stint decomposed](../figures/deck_decomposition.png)
 
@@ -269,7 +269,7 @@ track, race context) → context-aware model → degradation curve.
 **Future.** Add information a lap table does not contain:
 
 ```
-                TRUEDEG
+               INCHIDENT
                    |
       +------------+------------+
       v            v            v
@@ -290,7 +290,7 @@ behaviour. This is the extension, not the initial claim.
 
 ---
 
-## Slide 11 — What TrueDeg enables
+## Slide 11 — What Inchident enables
 
 From *"how fast?"* to *"why?"*. Once we can estimate the tyre's actual
 performance state:

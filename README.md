@@ -1,8 +1,8 @@
-# TrueDeg
+# Inchident
 
 Counterfactual F1 tyre-degradation modelling. Within a single stint tyre age and
 fuel load are perfectly collinear, so a naive "lap time vs tyre age" curve is
-meaningless. TrueDeg pools many stints across many races, models lap time from
+meaningless. Inchident pools many stints across many races, models lap time from
 tyre age **plus context** (fuel, track evolution, thermal, compound, circuit,
 traffic), then sweeps only `TyreLife` with everything else held fixed to recover
 the true degradation curve `D(a) = P_a - P_0`.
@@ -32,7 +32,7 @@ python3.12 -m venv .venv
 #    then the narrative figures for the idea-submission document
 .venv/bin/python -m src.deck_figures
 
-# 4. Ablation + first TrueDeg curve. Model 1 must beat Model 0.
+# 4. Ablation + first Inchident curve. Model 1 must beat Model 0.
 .venv/bin/python -m src.model
 
 # 5. Demo
@@ -46,7 +46,7 @@ python3.12 -m venv .venv
 | `src/build_dataset.py` | FastF1 -> `data/stints.parquet` (networked, cached) |
 | `src/features.py` | fuel / track-evo / thermal proxies |
 | `src/experiments.py` | Experiments 0-6, one figure each -> `figures/` |
-| `src/regression.py` | Interpretable OLS pace model: coefficients, fuel-prior check, slope progression, `truedeg_curve` |
+| `src/regression.py` | Interpretable OLS pace model: coefficients, fuel-prior check, slope progression, `inchident_curve` |
 | `src/degradation.py` | Per-circuit + temperature-modulated degradation coefficients -> `deg_*.png` |
 | `src/deck_figures.py` | Narrative figures (`deck_*.png`) for `docs/idea-submission.*` |
 | `src/model.py` | Model 0 vs Model 1 ablation + counterfactual curve |
@@ -66,7 +66,7 @@ recomputes `D(a)` in the browser from the fitted coefficients in
 cd web && vercel deploy --prod
 ```
 
-Live: <https://web-indol-nine-52.vercel.app>
+Live: <https://inchident-pink.vercel.app>
 
 ## Caveats to state in the deck
 

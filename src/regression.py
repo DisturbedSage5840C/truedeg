@@ -106,7 +106,7 @@ def _predict_pace(res, ctx, ages):
     return res.predict(grid).to_numpy()
 
 
-def truedeg_curve(res, context_row, max_age=25):
+def inchident_curve(res, context_row, max_age=25):
     """Counterfactual sweep: hold context fixed, vary only TyreLife.
 
     penalty(a) = predicted_pace(a) - predicted_pace(0)

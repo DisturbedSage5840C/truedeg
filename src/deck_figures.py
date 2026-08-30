@@ -17,7 +17,7 @@ import pandas as pd
 
 from src.features import load_features
 from src.regression import (
-    fit_pace_model, choose_fuel_mode, slope_progression, truedeg_curve,
+    fit_pace_model, choose_fuel_mode, slope_progression, inchident_curve,
     _model_frame,
 )
 
@@ -149,7 +149,7 @@ def naive_vs_context(df):
     stint = _pick_stint(df, "2023_Spain", "MEDIUM")
     ctx = stint.iloc[0][["Event", "Compound", "FuelKg", "TrackEvoIdx",
                          "TrackTemp"]].to_dict()
-    ages, deg = truedeg_curve(res, ctx, max_age=25)
+    ages, deg = inchident_curve(res, ctx, max_age=25)
 
     fig, (a0, a1) = plt.subplots(1, 2, figsize=(11, 4.3), sharey=True)
     a0.plot(nb_med.index, nb_med.values, marker="o", color="#888")
@@ -238,12 +238,12 @@ def validation(df):
                "TrackTemp": here.TrackTemp.median()}
 
         med = _race_median_curve(df, race, comp)
-        ages, deg = truedeg_curve(res, ctx, max_age=int(med.index.max()))
+        ages, deg = inchident_curve(res, ctx, max_age=int(med.index.max()))
 
         ax.plot(med.index, med.values, marker="o", ms=4, color="#37c",
                 label="actual (fuel-corrected, median of stints)")
         ax.plot(ages, deg, color="#c33", lw=2.5,
-                label="predicted TrueDeg (race held out)")
+                label="predicted Inchident (race held out)")
         ax.axhline(0, color="k", lw=.6)
         ax.set_title(f"{race.replace('_', ' ')} -- {comp.lower()}\n"
                      f"{here.StintId.nunique()} stints, model never saw this race")

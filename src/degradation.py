@@ -1,4 +1,4 @@
-"""Degradation coefficients -- the quantity TrueDeg actually estimates.
+"""Degradation coefficients -- the quantity Inchident actually estimates.
 
     python -m src.degradation
 

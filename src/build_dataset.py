@@ -1,4 +1,4 @@
-"""Build the TrueDeg stint dataset from FastF1.
+"""Build the Inchident stint dataset from FastF1.
 
 This is the ONLY script that touches the network. Run once, cache forever.
 

@@ -1,4 +1,4 @@
-"""Derived features / proxies for the TrueDeg experiments and models.
+"""Derived features / proxies for the Inchident experiments and models.
 
 Everything downstream (experiments.py, model.py, app.py) reads
 data/stints.parquet through add_features().
