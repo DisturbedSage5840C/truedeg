@@ -2,290 +2,532 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Inchident Dashboard</title>
+<title>Inchident Console</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Interactive tyre-degradation curve — pick a circuit, compound, track temperature and tyre age; the curve is recomputed from coefficients fitted on 13 F1 races.">
+<meta name="description" content="Live degradation console — pick circuit, compound, track temperature and tyre age; the counterfactual degradation curve and coefficients are recomputed in-browser from a model fitted on 13 F1 races.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
 <style>
   :root{
-    --paper:#f2f4f5; --surface:#ffffff; --surface-2:#e8ecee;
-    --ink:#14181b; --ink-soft:#46505a; --ink-faint:#6f7a83;
-    --rule:#d7dde0; --rule-strong:#bfc8cc;
-    --method:#1f7a8c; --method-wash:#e0eef1;
-    --answer:#c1462b; --answer-wash:#f6e6e1; --answer-ink:#a3371f;
-    --band:#c1462b22;
-    --shadow:0 1px 2px rgba(15,20,25,.05), 0 10px 30px rgba(15,20,25,.07);
-  }
-  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-    --paper:#0e1113; --surface:#161a1d; --surface-2:#1d2226;
-    --ink:#e6e9ea; --ink-soft:#a9b2b8; --ink-faint:#79838a;
-    --rule:#282f33; --rule-strong:#3a4247;
-    --method:#52b9cb; --method-wash:#123037;
-    --answer:#ef6a4c; --answer-wash:#2b1712; --answer-ink:#f2856b;
-    --band:#ef6a4c26;
-    --shadow:0 1px 2px rgba(0,0,0,.32), 0 12px 36px rgba(0,0,0,.46);
-  }}
-  :root[data-theme="dark"]{
-    --paper:#0e1113; --surface:#161a1d; --surface-2:#1d2226;
-    --ink:#e6e9ea; --ink-soft:#a9b2b8; --ink-faint:#79838a;
-    --rule:#282f33; --rule-strong:#3a4247;
-    --method:#52b9cb; --method-wash:#123037;
-    --answer:#ef6a4c; --answer-wash:#2b1712; --answer-ink:#f2856b;
-    --band:#ef6a4c26;
-    --shadow:0 1px 2px rgba(0,0,0,.32), 0 12px 36px rgba(0,0,0,.46);
+    --bg:#090909; --surface:#0f0f10; --panel:#141415; --panel-raised:#1a1a1b;
+    --border:rgba(255,255,255,.07); --border-mid:rgba(255,255,255,.12);
+    --text-primary:#efefef; --text-secondary:#888; --text-muted:#444; --text-label:#666;
+    --red:#e8002d; --red-dim:rgba(232,0,45,.18); --red-mid:rgba(232,0,45,.45);
+    --mono:"JetBrains Mono",ui-monospace,monospace;
+    --condensed:"Barlow Condensed",system-ui,sans-serif;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--paper);color:var(--ink);
-    font-family:"Source Serif 4",Georgia,serif;font-size:1.02rem;line-height:1.6;
-    -webkit-font-smoothing:antialiased}
-  a{color:var(--method)}
-  .bar{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--paper) 90%,transparent);
-    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid var(--rule)}
-  .bar__in{max-width:64rem;margin:0 auto;padding:.6rem 1.5rem;display:flex;
-    align-items:center;justify-content:space-between;gap:1rem}
-  .bar__mark{font-family:"Archivo",system-ui,sans-serif;font-weight:700;
-    font-size:.82rem;letter-spacing:.16em;text-transform:uppercase}
-  .bar__nav{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.74rem}
-  .bar__nav a{color:var(--ink-faint);text-decoration:none;margin-left:1rem}
-  .bar__nav a:hover{color:var(--method)}
-  main{max-width:64rem;margin:0 auto;padding:2.4rem 1.5rem 5rem}
-  h1{font-family:"Archivo",system-ui,sans-serif;font-weight:700;
-    font-size:clamp(1.9rem,5vw,2.7rem);line-height:1.05;margin:0 0 .6rem;letter-spacing:-.01em}
-  h1 .m{color:var(--method)} h1 .a{color:var(--answer)}
-  .sub{color:var(--ink-soft);max-width:44rem;margin:0 0 2rem}
-  .grid{display:grid;grid-template-columns:19rem 1fr;gap:1.5rem;align-items:start}
-  @media (max-width:820px){.grid{grid-template-columns:1fr}}
-  .panel{background:var(--surface);border:1px solid var(--rule);border-radius:6px;
-    padding:1.2rem;box-shadow:var(--shadow)}
-  .panel h2{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.7rem;
-    letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);
-    margin:0 0 1rem}
-  .field{margin:0 0 1.2rem}
-  .field:last-child{margin-bottom:0}
-  .field label{display:flex;justify-content:space-between;align-items:baseline;
-    font-family:"Archivo",system-ui,sans-serif;font-weight:600;font-size:.9rem;margin:0 0 .4rem}
-  .field label .val{font-family:"JetBrains Mono",ui-monospace,monospace;font-weight:400;
-    font-size:.82rem;color:var(--method)}
-  select,input[type=range]{width:100%}
-  select{font-family:"Source Serif 4",serif;font-size:.95rem;padding:.45rem .5rem;
-    background:var(--surface-2);color:var(--ink);border:1px solid var(--rule-strong);
-    border-radius:4px}
-  input[type=range]{accent-color:var(--answer);height:1.5rem}
-  .hint{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.68rem;
-    color:var(--ink-faint);margin:.35rem 0 0}
+  *{scrollbar-width:thin;scrollbar-color:var(--border-mid) transparent}
+  html,body{height:100%}
+  body{
+    margin:0;background:var(--bg);color:var(--text-primary);
+    font-family:var(--condensed);font-feature-settings:"ss01","ss02";
+    -webkit-font-smoothing:antialiased;overflow:hidden;
+  }
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:var(--mono)}
+  .lbl{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--text-label)}
+  .app{display:flex;flex-direction:column;height:100%}
 
-  .readout{background:var(--surface);border:1px solid var(--rule);border-radius:6px;
-    box-shadow:var(--shadow);overflow:hidden}
-  .readout__top{display:flex;flex-wrap:wrap;gap:1.5rem;padding:1.3rem 1.4rem;
-    border-bottom:1px solid var(--rule);align-items:flex-end}
-  .big{display:flex;flex-direction:column}
-  .big .k{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.68rem;
-    letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:.2rem}
-  .big .v{font-family:"Archivo",system-ui,sans-serif;font-weight:700;font-size:2.4rem;
-    line-height:1;color:var(--answer)}
-  .big .v.small{font-size:1.35rem;color:var(--ink)}
-  .big .v.method{color:var(--method)}
-  svg{display:block;width:100%;height:auto}
-  .chartwrap{padding:1rem 1rem .4rem}
-  .foot{padding:1rem 1.4rem 1.3rem;font-family:"JetBrains Mono",ui-monospace,monospace;
-    font-size:.72rem;color:var(--ink-faint);line-height:1.6}
-  .foot code{background:var(--surface-2);border:1px solid var(--rule);border-radius:3px;
-    padding:.05em .3em;font-size:.95em}
-  .note{margin-top:1.4rem;font-size:.9rem;color:var(--ink-soft);max-width:44rem}
-  .tag{display:inline-block;font-family:"JetBrains Mono",ui-monospace,monospace;
-    font-size:.66rem;padding:.15rem .45rem;border:1px solid var(--rule-strong);
-    border-radius:3px;color:var(--ink-faint);margin-left:.5rem}
-  :focus-visible{outline:2px solid var(--method);outline-offset:2px;border-radius:2px}
+  /* header */
+  header{
+    height:48px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;
+    padding:0 20px;border-bottom:1px solid var(--border);background:var(--surface);gap:16px;
+  }
+  .brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .brand__mk{width:26px;height:26px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+    border:1px solid var(--red-mid);background:var(--red-dim)}
+  .brand__mk img{width:16px;height:16px;object-fit:contain}
+  .brand__name{font-family:var(--condensed);font-weight:700;font-size:15px;letter-spacing:.06em;color:#fff;white-space:nowrap}
+  .brand__name b{color:var(--red);font-weight:700}
+  .brand__sub{font-family:var(--condensed);font-weight:400;font-size:11px;letter-spacing:.02em;color:var(--text-muted);margin-left:8px;white-space:nowrap}
+  .hbar{display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .chip{display:flex;flex-direction:column;justify-content:center;padding:4px 10px;border:1px solid var(--border);background:var(--panel);min-width:96px;position:relative}
+  .chip>span:first-child{font-family:var(--mono);font-size:8px;letter-spacing:.16em;color:var(--text-muted);text-transform:uppercase}
+  .chip select{
+    -webkit-appearance:none;appearance:none;background:transparent;border:0;padding:2px 14px 0 0;margin:0;
+    font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--text-primary);
+    width:100%;cursor:pointer;outline:none;
+  }
+  .chip::after{content:"▾";position:absolute;right:8px;bottom:5px;font-size:8px;color:var(--text-muted);pointer-events:none}
+  .chip select option{background:#161616;color:#efefef}
+  .nav{display:flex;gap:2px}
+  .nav a{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-secondary);
+    padding:6px 8px;border:1px solid transparent}
+  .nav a:hover{color:#eee;border-color:var(--border)}
+
+  /* body split */
+  .body{display:flex;flex:1;overflow:hidden}
+
+  /* sidebar */
+  aside{
+    width:210px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);
+    display:flex;flex-direction:column;padding:16px 14px;overflow-y:auto;gap:4px;
+  }
+  .sect{display:flex;align-items:center;gap:8px;margin:2px 0 12px}
+  .sect span{font-family:var(--mono);font-size:9px;letter-spacing:.22em;font-weight:600;text-transform:uppercase;color:var(--text-secondary);white-space:nowrap}
+  .sect .ln{flex:1;height:1px;background:var(--border)}
+  .divider{height:1px;background:var(--border);margin:16px 0}
+
+  .fld{margin-bottom:14px}
+  .fld__top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+  .fld__top b{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.04em;color:var(--text-primary);text-transform:uppercase}
+  .fld__top i{font-family:var(--mono);font-size:11px;font-style:normal;color:var(--red);font-weight:600}
+  .fld input[type=range]{width:100%;height:16px;accent-color:var(--red);cursor:pointer;background:transparent}
+  .fld small{display:block;font-family:var(--mono);font-size:8px;letter-spacing:.06em;color:var(--text-muted);margin-top:4px;line-height:1.5}
+
+  .held{display:flex;flex-direction:column;gap:9px}
+  .held__row{display:flex;flex-direction:column;gap:3px}
+  .held__row .k{display:flex;justify-content:space-between;align-items:baseline}
+  .held__row .k b{font-family:var(--mono);font-size:9.5px;font-weight:500;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.03em}
+  .held__row .k i{font-family:var(--mono);font-size:10px;font-style:normal;color:#cfcfcf}
+  .held__bar{height:3px;background:rgba(255,255,255,.06)}
+  .held__bar span{display:block;height:100%;background:rgba(255,255,255,.28)}
+
+  .flip{margin-top:2px;font-family:var(--mono);font-size:9px;line-height:1.7;color:var(--text-muted)}
+  .flip b{color:var(--text-secondary)}
+  .flip .neg{color:#7a7a7a}
+  .flip .pos{color:var(--red)}
+
+  .spacer{flex:1}
+  .provenance{
+    margin-top:14px;padding:8px 10px;border:1px solid var(--border-mid);background:var(--panel);
+    font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-secondary);
+    display:flex;align-items:center;gap:7px;line-height:1.5;
+  }
+  .provenance .dot{width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0;animation:pulse 2.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+  @media (prefers-reduced-motion:reduce){.provenance .dot{animation:none}}
+
+  /* main */
+  main{flex:1;display:flex;flex-direction:column;padding:12px;gap:12px;overflow:hidden;min-width:0}
+
+  .kpis{display:flex;gap:12px;flex-shrink:0;height:118px}
+  .kpi{
+    flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:14px;position:relative;overflow:hidden;
+    background:var(--panel);border:1px solid var(--border);border-left:2px solid var(--red);
+  }
+  .kpi.exec{background:var(--red);border:none}
+  .kpi__corner{position:absolute;top:0;right:0;width:10px;height:10px;
+    border-left:1px solid var(--border-mid);border-bottom:1px solid var(--border-mid)}
+  .kpi.exec .kpi__corner{border-color:rgba(255,255,255,.2)}
+  .kpi__top{display:flex;align-items:flex-start;justify-content:space-between;position:relative}
+  .kpi__k{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--red)}
+  .kpi.exec .kpi__k{color:rgba(255,255,255,.7)}
+  .kpi__tag{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.12em;padding:2px 6px;
+    background:rgba(255,255,255,.06);color:#8a8a8a}
+  .kpi.exec .kpi__tag{background:rgba(0,0,0,.2);color:rgba(255,255,255,.9)}
+  .kpi__v{font-family:var(--condensed);font-weight:700;font-size:34px;line-height:1;letter-spacing:-.01em;
+    color:var(--text-primary);margin:8px 0 3px}
+  .kpi.exec .kpi__v{color:#fff}
+  .kpi__s{font-family:var(--mono);font-size:10px;letter-spacing:.02em;color:var(--text-secondary)}
+  .kpi.exec .kpi__s{color:rgba(255,255,255,.7)}
+  .kpi__v .unit{font-size:16px;font-weight:600;color:var(--text-muted);margin-left:3px}
+  .kpi.exec .kpi__v .unit{color:rgba(255,255,255,.55)}
+
+  .card{background:var(--panel);border:1px solid var(--border);position:relative;display:flex;flex-direction:column;min-height:0}
+  .card--primary{border-left:2px solid var(--red)}
+  .card__accent{position:absolute;top:0;left:0;height:1px;width:38%;background:var(--red)}
+  .card__hd{display:flex;align-items:flex-start;justify-content:space-between;padding:13px 16px 8px;flex-shrink:0;gap:12px}
+  .card__hd h3{margin:0;font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--red);font-weight:600}
+  .card__hd .meta{font-family:var(--mono);font-size:10px;color:var(--text-muted);margin-top:3px}
+  .legend{display:flex;gap:16px;align-items:center;flex-wrap:nowrap;flex-shrink:0}
+  .legend div{display:flex;align-items:center;gap:6px}
+  .legend .lbl{color:var(--text-secondary);white-space:nowrap;letter-spacing:.1em}
+
+  .chartbox{flex:1;min-height:0;padding:0 10px 8px}
+  svg{display:block;width:100%;height:100%}
+
+  .row3{display:flex;gap:12px;flex-shrink:0;height:224px}
+  .row3 .card{flex:1;min-width:0}
+  .barsbox{flex:1;min-height:0;padding:6px 16px 10px;overflow:hidden}
+  .barrow{display:grid;grid-template-columns:64px 1fr 46px;align-items:center;gap:8px;height:20px}
+  .barrow .nm{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .barrow.on .nm{color:#fff}
+  .barrow .track{position:relative;height:9px;background:rgba(255,255,255,.05)}
+  .barrow .fill{position:absolute;left:0;top:0;height:100%;background:rgba(255,255,255,.24)}
+  .barrow.on .fill{background:var(--red)}
+  .barrow .ci{position:absolute;top:50%;height:5px;transform:translateY(-50%);border-left:1px solid rgba(255,255,255,.35);border-right:1px solid rgba(255,255,255,.35)}
+  .barrow .vv{font-family:var(--mono);font-size:9.5px;color:#bbb;text-align:right}
+  .barrow.on .vv{color:#fff;font-weight:600}
+  .barrow .star{color:var(--text-muted);font-size:8px}
+
+  .flipbox{flex:1;min-height:0;padding:8px 16px;display:flex;flex-direction:column;gap:6px;justify-content:center}
+  .fliprow{display:grid;grid-template-columns:104px 1fr 50px;align-items:center;gap:8px;height:19px}
+  .fliprow .nm{font-family:var(--mono);font-size:8.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fliprow .dbar{position:relative;height:10px}
+  .fliprow .dbar .zero{position:absolute;top:-3px;bottom:-3px;width:1px;background:var(--border-mid)}
+  .fliprow .dbar .seg{position:absolute;top:0;height:100%}
+  .fliprow .neg{background:rgba(255,255,255,.18)}
+  .fliprow .pos{background:var(--red)}
+  .fliprow .vv{font-family:var(--mono);font-size:9px;text-align:right;color:#bbb}
+  .fliprow.last .nm{color:#fff}
+  .fliprow.last .vv{color:#fff;font-weight:600}
+
+  .alert{margin:8px 16px 12px;flex-shrink:0;display:flex;align-items:center;gap:9px;padding:8px 12px;
+    background:rgba(232,0,45,.07);border:1px solid rgba(232,0,45,.25);border-left:3px solid var(--red)}
+  .alert .mk{font-family:var(--mono);font-size:10px;color:var(--red)}
+  .alert .tx{font-family:var(--mono);font-size:9.5px;letter-spacing:.03em;color:rgba(232,80,80,.95);line-height:1.5}
+  .alert .rt{margin-left:auto;font-family:var(--mono);font-size:8px;letter-spacing:.16em;color:rgba(232,0,45,.5);flex-shrink:0}
+
+  /* svg text helpers */
+  .ax{fill:rgba(255,255,255,.3);font:9px "JetBrains Mono",monospace}
+  .axt{fill:rgba(255,255,255,.2);font:8px "JetBrains Mono",monospace;letter-spacing:.12em}
+  .grid{stroke:rgba(255,255,255,.045)}
+
+  @media (max-width:1000px){
+    body{overflow:auto}
+    .app{height:auto;min-height:100%}
+    .body{flex-direction:column;overflow:visible}
+    aside{width:auto;border-right:none;border-bottom:1px solid var(--border);flex-direction:row;flex-wrap:wrap;gap:16px 24px;align-items:flex-start}
+    aside>*{flex:1;min-width:150px}
+    .sect{margin-bottom:8px}
+    .divider{display:none}
+    .spacer{display:none}
+    .provenance{width:100%;flex-basis:100%}
+    main{overflow:visible}
+    .kpis,.row3{height:auto;flex-wrap:wrap}
+    .kpi{min-width:150px}
+    .row3 .card{min-width:260px;min-height:220px}
+    .card[style]{flex:none!important}
+    .card--primary{min-height:400px}
+    .card__hd{flex-wrap:wrap;gap:6px}
+    .legend{flex-wrap:wrap;gap:10px 14px}
+    .chartbox{height:320px;flex:1}
+  }
+  @media (max-width:560px){
+    header{height:auto;flex-wrap:wrap;padding:10px 14px;gap:10px}
+    .hbar{flex-wrap:wrap}
+    .brand__sub{display:none}
+    .kpi{flex-basis:100%}
+    .row3 .card{flex-basis:100%}
+  }
 </style>
 </head>
 <body>
+<div class="app">
 
-<div class="bar"><div class="bar__in">
-  <span class="bar__mark">Inchident</span>
-  <nav class="bar__nav">
-    <a href="index.html">home</a>
-    <a href="degradation-estimation.html">method</a>
-    <a href="idea-submission.html">deck</a>
-  </nav>
-</div></div>
-
-<main>
-  <h1>The <span class="a">degradation</span> curve, <span class="m">recomputed</span> live</h1>
-  <p class="sub">Pick a circuit, compound, track temperature and tyre age. The curve
-  is <code>D(a) = (d + temp·ΔT)·mult·a + curv·a²</code> evaluated in your browser,
-  with <code>d</code> and the other coefficients fitted on 13&nbsp;races
-  (10,381&nbsp;green dry laps). This is the Streamlit demo's maths as a static page.</p>
-
-  <div class="grid">
-    <div class="panel">
-      <h2>Inputs</h2>
-      <div class="field">
-        <label for="circuit">Circuit <span class="val" id="circuit-d"></span></label>
-        <select id="circuit"></select>
-        <p class="hint" id="circuit-note"></p>
-      </div>
-      <div class="field">
-        <label for="compound">Compound <span class="val" id="compound-mult"></span></label>
-        <select id="compound"></select>
-        <p class="hint">soft multiplier is within-circuit and stint-censored — treat as indicative</p>
-      </div>
-      <div class="field">
-        <label for="temp">Track temperature <span class="val"><span id="temp-val"></span> °C</span></label>
-        <input type="range" id="temp" min="10" max="55" step="1">
-        <p class="hint" id="temp-hint"></p>
-      </div>
-      <div class="field">
-        <label for="age">Tyre age <span class="val"><span id="age-val"></span> laps</span></label>
-        <input type="range" id="age" min="0" max="35" step="1">
-        <p class="hint">how many laps this set has run</p>
-      </div>
+  <header>
+    <div class="brand">
+      <span class="brand__mk"><img alt="Inchident" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAWCAYAAAAvg9c4AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAOdEVYdFNvZnR3YXJlAEZpZ21hnrGWYwAAAt5JREFUeAHtVFtIk2EYfneShacpc8gO8Yt6I7ItUTKQNEEmJlkmKZq2rrrwQo15EXThTUQ3YngTC2IQ1E1IMeeQkIIJXjh0aSpiuIMOt3mx39xyOmE934+FQVPKy3rhh+/wHp73eZ/vJ/qnTXLSpdFoVKhUKmU4HP56/EwkEoljsVgyXZz0d4darfacwWCoRvAwPn5hYeHKjzucP8/IyCianZ0d9ng8r+g0pJWVlXXt7e392dnZL7Oysu51dXUVBgIBDRKPhkKhBFBymZmZ1vr6evX+/v5NFLiLGINYLA5tbW0FfyJl7SiVyr6GhoZWh8OhLysrY0gpLy+PrFYrIaEsNze3G76jHMfVYU9jY2NkMpkoHo+fVygU5pWVFbPFYvGura098fv9k2KpVPo4lUoNFRQU6GtqaiiZTApBiUSC9Ho9NTY2EpK1HoG4U1VVxToidELj4+Mi5scKAEzR4eHhM5lM9kCCQcQHBwfNExMTQtTBwQG1tbXR4uIi7e3tEQZCaI0DJc78/PxHAEDb29vE8zw1NTXR6uoqRaNRWl9fFwDMzMxYJODKh6r9Go1GDgrI6XQSC9zd3aXm5maampr6BvS8XC6/jpo8Eip6e3tZ0RSoELFkZrOZNjY2aHNz02e32weEQQGyqqSk5BImKrTM7CNsbm5uJBgM9qCAq7i4uA+c3QCPQz6f79PS0lIhBqUFGHK5XEKM2+1+jcQO6VHLdrVafR9VeSB7GolE3kBGn4+pgsCXsJ6fn/fjs2FpQxwnkUgGSktLr9XW1nLT09MvftEWVGCkNAaObaAi0tnZOZLOB6gv0J9YR0dHuKKiwtTS0hLFVnya/6kOaOAqBvUF/E5Ckx5QcfnMScvLy3ugRStbQ9jvdDrdwzMlRUIdtHrL6/V+YHto0wa9XmSv8K+T4mFU5+TkOJeXlwNsjx8ID6G78dZvnxQnPelyZ2fnLeTz/vgZKOhG0hj9t3T2HX/DRLQ3r5peAAAAAElFTkSuQmCC"></span>
+      <span class="brand__name">INCH<b>IDENT</b></span>
+      <span class="brand__sub">Counterfactual Tyre Degradation</span>
     </div>
-
-    <div class="readout">
-      <div class="readout__top">
-        <div class="big">
-          <span class="k">Tyre penalty at this age</span>
-          <span class="v" id="out-penalty">–</span>
-        </div>
-        <div class="big">
-          <span class="k">Effective rate d</span>
-          <span class="v small method" id="out-rate">–</span>
-        </div>
-        <div class="big">
-          <span class="k">Full-stint loss (to max age)</span>
-          <span class="v small" id="out-stint">–</span>
-        </div>
-      </div>
-      <div class="chartwrap">
-        <svg id="chart" viewBox="0 0 640 360" role="img" aria-label="Tyre degradation penalty versus tyre age"></svg>
-      </div>
-      <div class="foot" id="foot"></div>
+    <div class="hbar">
+      <label class="chip"><span>Circuit</span><select id="circuit" aria-label="Circuit"></select></label>
+      <label class="chip"><span>Compound</span><select id="compound" aria-label="Tyre compound"></select></label>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="degradation-estimation.html">Method</a>
+        <a href="idea-submission.html">Deck</a>
+      </nav>
     </div>
+  </header>
+
+  <div class="body">
+    <aside>
+      <div>
+        <div class="sect"><span>Parameters</span><div class="ln"></div></div>
+        <div class="fld">
+          <div class="fld__top"><b>Track Temp</b><i><span id="temp-val"></span>°C</i></div>
+          <input type="range" id="temp" min="10" max="55" step="1" aria-label="Track temperature in Celsius">
+          <small id="temp-hint"></small>
+        </div>
+        <div class="fld">
+          <div class="fld__top"><b>Tyre Age</b><i><span id="age-val"></span> lap</i></div>
+          <input type="range" id="age" min="0" max="35" step="1" aria-label="Tyre age in laps">
+          <small>laps run on this set of tyres</small>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div>
+        <div class="sect"><span>Held Fixed</span><div class="ln"></div></div>
+        <div class="held">
+          <div class="held__row">
+            <div class="k"><b>Fuel burn</b><i>0.030 s/kg</i></div>
+            <div class="held__bar"><span style="width:60%"></span></div>
+          </div>
+          <div class="held__row">
+            <div class="k"><b>Track evolution</b><i>modelled</i></div>
+            <div class="held__bar"><span style="width:44%"></span></div>
+          </div>
+          <div class="held__row">
+            <div class="k"><b>Curvature a²</b><i>−0.00165</i></div>
+            <div class="held__bar"><span style="width:22%"></span></div>
+          </div>
+          <div class="held__row">
+            <div class="k"><b>Circuit baseline</b><i>absorbed</i></div>
+            <div class="held__bar"><span style="width:80%"></span></div>
+          </div>
+        </div>
+        <p class="flip">
+          age-only slope <span class="neg">−0.170 s/lap</span><br>
+          full model <span class="pos">+0.114 s/lap</span><br>
+          <b>fuel + track evo flip the sign</b>
+        </p>
+      </div>
+
+      <div class="spacer"></div>
+      <div class="provenance">
+        <span class="dot"></span>
+        <span id="prov">13 races · 2023–24 · 10,381 laps · FastF1</span>
+      </div>
+    </aside>
+
+    <main>
+      <div class="kpis">
+        <div class="kpi">
+          <span class="kpi__corner"></span>
+          <div class="kpi__top"><span class="kpi__k">Tyre Penalty</span></div>
+          <div>
+            <div class="kpi__v" id="k-pen">–</div>
+            <div class="kpi__s" id="k-pen-s">vs fresh tyre · context held</div>
+          </div>
+        </div>
+        <div class="kpi">
+          <span class="kpi__corner"></span>
+          <div class="kpi__top"><span class="kpi__k">Degradation Rate</span></div>
+          <div>
+            <div class="kpi__v" id="k-rate">–</div>
+            <div class="kpi__s" id="k-rate-s">effective d at these conditions</div>
+          </div>
+        </div>
+        <div class="kpi exec">
+          <span class="kpi__corner"></span>
+          <div class="kpi__top"><span class="kpi__k">Stint Cost</span><span class="kpi__tag" id="k-cost-tag">STINT</span></div>
+          <div>
+            <div class="kpi__v" id="k-cost">–</div>
+            <div class="kpi__s" id="k-cost-s">cumulative loss over the stint</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card card--primary" style="flex:1 1 0">
+        <span class="card__accent"></span>
+        <div class="card__hd">
+          <div>
+            <h3>Primary Degradation Curve</h3>
+            <div class="meta" id="chart-meta">–</div>
+          </div>
+          <div class="legend">
+            <div><svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="rgba(255,255,255,.28)" stroke-width="1" stroke-dasharray="3 2"/></svg><span class="lbl">Naive (age only)</span></div>
+            <div><svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="rgba(255,255,255,.9)" stroke-width="2.5"/></svg><span class="lbl">Inchident (context held)</span></div>
+          </div>
+        </div>
+        <div class="chartbox"><svg id="chart" viewBox="0 0 900 320" preserveAspectRatio="none" role="img" aria-label="Degradation penalty versus tyre age"></svg></div>
+      </div>
+
+      <div class="row3">
+        <div class="card">
+          <div class="card__hd"><div><h3>Per-Circuit Degradation</h3><div class="meta">coefficient d · s/lap · bars scaled to field max</div></div></div>
+          <div class="barsbox" id="bars"></div>
+        </div>
+        <div class="card">
+          <div class="card__hd"><div><h3>Why The Sign Flips</h3><div class="meta">tyre-age slope as context is added back</div></div></div>
+          <div class="flipbox" id="flip"></div>
+          <div class="alert">
+            <span class="mk">▲</span>
+            <span class="tx" id="alert-tx">SOFT coefficient carries selection bias — softs are pitted before the cliff (FIA Art. 30.5).</span>
+            <span class="rt">ART 30.5</span>
+          </div>
+        </div>
+      </div>
+    </main>
   </div>
-
-  <p class="note">The shaded band is the 95% confidence interval on the circuit
-  coefficient <code>d</code>, scaled by the same temperature and compound factors.
-  Penalty is pace lost purely to tyre condition versus a fresh tyre in identical
-  conditions — fuel burn, track evolution and the circuit baseline are held fixed,
-  exactly as in the <a href="degradation-estimation.html">method note</a>.
-  Circuits marked <span class="tag">1 season</span> appear only in 2024 and are
-  not cross-validated.</p>
-</main>
+</div>
 
 <script>
-const COEF = {"circuits":{"Suzuka":0.1094,"Monza":0.1033,"Bahrain":0.0956,"Las Vegas":0.0846,"Silverstone":0.0765,"Spain":0.0752,"Jeddah":0.0274,"Monaco":0.022},"ci":{"Suzuka":[0.097,0.1217],"Monza":[0.0912,0.1153],"Bahrain":[0.0842,0.1071],"Las Vegas":[0.0705,0.0988],"Silverstone":[0.0642,0.0889],"Spain":[0.0642,0.0863],"Jeddah":[0.0125,0.0423],"Monaco":[0.006,0.0379]},"circuit_note":{"Suzuka":"fast, high-energy corners","Monza":"low downforce, heavy braking","Bahrain":"abrasive surface, hot","Las Vegas":"cold night, long straights","Silverstone":"fast, cool, flowing","Spain":"sustained-load corners","Jeddah":"smooth street, low abrasion","Monaco":"lowest energy, management race"},"curvature":-0.00165,"temp_slope_per_degC":0.00042,"mean_track_temp":33.7,"compound_mult":{"HARD":1.022,"MEDIUM":1.0,"SOFT":1.108},"meta":{"Bahrain":{"tt_typ":24,"tt_lo":21,"tt_hi":31,"compounds":["HARD","MEDIUM","SOFT"],"paired":true,"year":"2023-24","maxage":24},"Jeddah":{"tt_typ":31,"tt_lo":30,"tt_hi":32,"compounds":["HARD","MEDIUM","SOFT"],"paired":false,"year":"2024","maxage":35},"Las Vegas":{"tt_typ":17,"tt_lo":16,"tt_hi":19,"compounds":["HARD","MEDIUM"],"paired":false,"year":"2024","maxage":26},"Monaco":{"tt_typ":46,"tt_lo":40,"tt_hi":49,"compounds":["HARD","MEDIUM","SOFT"],"paired":false,"year":"2024","maxage":35},"Monza":{"tt_typ":44,"tt_lo":41,"tt_hi":51,"compounds":["HARD","MEDIUM"],"paired":true,"year":"2023-24","maxage":34},"Silverstone":{"tt_typ":29,"tt_lo":24,"tt_hi":33,"compounds":["HARD","MEDIUM","SOFT"],"paired":true,"year":"2023-24","maxage":29},"Spain":{"tt_typ":33,"tt_lo":27,"tt_hi":43,"compounds":["HARD","MEDIUM","SOFT"],"paired":true,"year":"2023-24","maxage":29},"Suzuka":{"tt_typ":37,"tt_lo":31,"tt_hi":44,"compounds":["HARD","MEDIUM","SOFT"],"paired":true,"year":"2023-24","maxage":26}},"n_laps":10381,"fuel_s_per_kg":{"prior":0.03,"recovered":0.0302},"formula":"D(a) = (d_circuit + temp_slope*(trackTemp - circuit_typical_temp)) * compound_mult * a  +  curvature * a^2"};
+const COEF = {"circuits":{"Suzuka":0.1094,"Monza":0.1033,"Bahrain":0.0956,"Las Vegas":0.0846,"Silverstone":0.0765,"Spain":0.0752,"Jeddah":0.0274,"Monaco":0.022},"ci":{"Suzuka":[0.097,0.1217],"Monza":[0.0912,0.1153],"Bahrain":[0.0842,0.1071],"Las Vegas":[0.0705,0.0988],"Silverstone":[0.0642,0.0889],"Spain":[0.0642,0.0863],"Jeddah":[0.0125,0.0423],"Monaco":[0.006,0.0379]},"circuit_note":{"Suzuka":"fast, high-energy corners","Monza":"low downforce, heavy braking","Bahrain":"abrasive surface, hot","Las Vegas":"cold night, long straights","Silverstone":"fast, cool, flowing","Spain":"sustained-load corners","Jeddah":"smooth street, low abrasion","Monaco":"lowest energy, management race"},"curvature":-0.00165,"temp_slope_per_degC":0.00042,"mean_track_temp":33.7,"compound_mult":{"HARD":1.022,"MEDIUM":1.0,"SOFT":1.108},"meta":{"Bahrain":{"tt_typ":24,"tt_lo":21,"tt_hi":31,"compounds":["HARD","MEDIUM","SOFT"],"paired":true,"year":"2023-24","maxage":24},"Jeddah":{"tt_typ":31,"tt_lo":30,"tt_hi":32,"compounds":["HARD","MEDIUM","SOFT"],"paired":false,"year":"2024","maxage":35},"Las Vegas":{"tt_typ":17,"tt_lo":16,"tt_hi":19,"compounds":["HARD","MEDIUM"],"paired":false,"year":"2024","maxage":26},"Monaco":{"tt_typ":46,"tt_lo":40,"tt_hi":49,"compounds":["HARD","MEDIUM","SOFT"],"paired":false,"year":"2024","maxage":35},"Monza":{"tt_typ":44,"tt_lo":41,"tt_hi":51,"compounds":["HARD","MEDIUM"],"paired":true,"year":"2023-24","maxage":34},"Silverstone":{"tt_typ":29,"tt_lo":24,"tt_hi":33,"compounds":["HARD","MEDIUM","SOFT"],"paired":true,"year":"2023-24","maxage":29},"Spain":{"tt_typ":33,"tt_lo":27,"tt_hi":43,"compounds":["HARD","MEDIUM","SOFT"],"paired":true,"year":"2023-24","maxage":29},"Suzuka":{"tt_typ":37,"tt_lo":31,"tt_hi":44,"compounds":["HARD","MEDIUM","SOFT"],"paired":true,"year":"2023-24","maxage":26}},"n_laps":10381,"n_races":13,"fuel_s_per_kg":{"prior":0.03,"recovered":0.0302},"naive_s_per_lap":-0.17,"full_s_per_lap":0.1137,"slope_progression":[{"label":"tyre age only","slope":-0.17},{"label":"+ circuit","slope":-0.0107},{"label":"+ compound","slope":-0.0042},{"label":"+ track temp","slope":0.0008},{"label":"+ track evolution","slope":0.0662},{"label":"+ fuel  (full model)","slope":0.1137}],"formula":"D(a) = (d_circuit + temp_slope*(trackTemp - circuit_typical_temp)) * compound_mult * a  +  curvature * a^2"};
 
 const $ = id => document.getElementById(id);
-const circuitSel = $("circuit"), compoundSel = $("compound"),
-      tempSl = $("temp"), ageSl = $("age");
-
+const NS = "http://www.w3.org/2000/svg";
+const circuitSel = $("circuit"), compoundSel = $("compound"), tempSl = $("temp"), ageSl = $("age");
 const CIRCUITS = Object.keys(COEF.circuits);
-CIRCUITS.forEach(c => circuitSel.add(new Option(c, c)));
+const RANKED = [...CIRCUITS].sort((a,b)=>COEF.circuits[b]-COEF.circuits[a]);
+CIRCUITS.forEach(c => circuitSel.add(new Option(c.toUpperCase(), c)));
 
-function fmt(x, dp=2){ return (x>=0?"+":"−") + Math.abs(x).toFixed(dp); }
+const fmt = (x,dp=2) => (x>=0?"+":"−") + Math.abs(x).toFixed(dp);
 
 function rate(circuitD, temp, circuit, compound){
   const typ = COEF.meta[circuit].tt_typ;
-  return (circuitD + COEF.temp_slope_per_degC * (temp - typ)) * COEF.compound_mult[compound];
+  return (circuitD + COEF.temp_slope_per_degC*(temp - typ)) * COEF.compound_mult[compound];
 }
-// global curvature is concave (tyre wear plateaus); on very low-deg circuits it
-// can pull the fitted curve below zero at mid-stint, which is just noise — a
-// worn tyre is never faster than a fresh one, so clamp the reading at zero.
-function penalty(d, a){ return Math.max(0, d*a + COEF.curvature*a*a); }
+// concave global curvature can pull very low-deg circuits below zero mid-stint;
+// a worn tyre is never faster than a fresh one, so clamp the reading at zero.
+const penalty = (d,a) => Math.max(0, d*a + COEF.curvature*a*a);
 
 function syncCompound(){
-  const circuit = circuitSel.value;
-  const avail = COEF.meta[circuit].compounds;
+  const avail = COEF.meta[circuitSel.value].compounds;
   const prev = compoundSel.value;
   compoundSel.innerHTML = "";
-  avail.forEach(c => compoundSel.add(new Option(c[0]+c.slice(1).toLowerCase(), c)));
-  compoundSel.value = avail.includes(prev) ? prev
-                    : avail.includes("MEDIUM") ? "MEDIUM" : avail[0];
+  avail.forEach(c => compoundSel.add(new Option(c, c)));
+  compoundSel.value = avail.includes(prev) ? prev : avail.includes("MEDIUM") ? "MEDIUM" : avail[0];
 }
 function syncRanges(){
   const m = COEF.meta[circuitSel.value];
   tempSl.min = Math.max(5, m.tt_lo - 8);
   tempSl.max = m.tt_hi + 8;
-  if (+tempSl.value < +tempSl.min || +tempSl.value > +tempSl.max || tempSl.dataset.touched !== "1")
-    tempSl.value = m.tt_typ;
+  if (tempSl.dataset.touched !== "1") tempSl.value = m.tt_typ;
+  tempSl.value = Math.min(Math.max(+tempSl.value, +tempSl.min), +tempSl.max);
   ageSl.max = m.maxage;
-  if (+ageSl.value > +ageSl.max) ageSl.value = ageSl.max;
-  $("temp-hint").textContent = `typical here ≈ ${m.tt_typ} °C   (data ${m.tt_lo}–${m.tt_hi} °C)`;
+  ageSl.value = Math.min(+ageSl.value, +ageSl.max);
+  $("temp-hint").textContent = `typical here ≈ ${m.tt_typ}°C · data ${m.tt_lo}–${m.tt_hi}°C`;
 }
 
-function chart(circuit, compound, temp, age){
-  const W=640,H=360, L=54,R=16,T=18,B=40;
+function el(tag, attrs, txt){
+  const n = document.createElementNS(NS, tag);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (txt != null) n.textContent = txt;
+  return n;
+}
+
+function drawChart(circuit, compound, temp, age){
+  const svg = $("chart");
+  svg.innerHTML = "";
+  const W = 900, H = 320, L = 60, R = 18, T = 16, B = 34;
   const maxAge = COEF.meta[circuit].maxage;
-  const d  = rate(COEF.circuits[circuit], temp, circuit, compound);
-  const dLo= rate(COEF.ci[circuit][0],   temp, circuit, compound);
-  const dHi= rate(COEF.ci[circuit][1],   temp, circuit, compound);
-  const yMax = Math.max(0.6, penalty(dHi, maxAge) * 1.15);
+  const d   = rate(COEF.circuits[circuit], temp, circuit, compound);
+  const dLo = rate(COEF.ci[circuit][0],   temp, circuit, compound);
+  const dHi = rate(COEF.ci[circuit][1],   temp, circuit, compound);
+  const naive = COEF.naive_s_per_lap;
+  const yMax = Math.max(0.5, penalty(dHi, maxAge) * 1.18);
+  const yMin = -0.18 * yMax;
   const x = a => L + (W-L-R) * a / maxAge;
-  const y = v => T + (H-T-B) * (1 - v / yMax);
+  const y = v => T + (H-T-B) * (1 - (v - yMin) / (yMax - yMin));
 
-  const line = dd => Array.from({length:maxAge+1},(_,a)=>`${a?"L":"M"}${x(a).toFixed(1)},${y(penalty(dd,a)).toFixed(1)}`).join("");
-  const bandTop = Array.from({length:maxAge+1},(_,a)=>`${a?"L":"M"}${x(a).toFixed(1)},${y(penalty(dHi,a)).toFixed(1)}`).join("");
-  const bandBot = Array.from({length:maxAge},(_,i)=>{const a=maxAge-i;return `L${x(a).toFixed(1)},${y(penalty(dLo,a)).toFixed(1)}`;}).join("") + `L${x(0).toFixed(1)},${y(0).toFixed(1)}`;
+  const clipId = "plot";
+  const defs = el("defs"); const cp = el("clipPath", {id: clipId});
+  cp.appendChild(el("rect", {x:L, y:T, width:W-L-R, height:H-T-B}));
+  defs.appendChild(cp); svg.appendChild(defs);
 
-  let gx=""; for(let a=0;a<=maxAge;a+=5){ gx+=`<line x1="${x(a)}" y1="${T}" x2="${x(a)}" y2="${H-B}" class="g"/><text x="${x(a)}" y="${H-B+18}" class="ax" text-anchor="middle">${a}</text>`; }
-  let gy=""; const step = yMax>2?0.5:yMax>1?0.25:0.1;
-  for(let v=0;v<=yMax+1e-9;v+=step){ gy+=`<line x1="${L}" y1="${y(v)}" x2="${W-R}" y2="${y(v)}" class="g"/><text x="${L-8}" y="${y(v)+4}" class="ax" text-anchor="end">${v.toFixed(2)}</text>`; }
+  // gridlines + y ticks
+  const step = yMax > 2 ? 0.5 : yMax > 1 ? 0.25 : 0.1;
+  for (let v = Math.ceil(yMin/step)*step; v <= yMax + 1e-9; v += step){
+    svg.appendChild(el("line", {x1:L, y1:y(v), x2:W-R, y2:y(v), class:"grid", "stroke-width": Math.abs(v)<1e-9?1.4:1, stroke: Math.abs(v)<1e-9?"rgba(255,255,255,.14)":"rgba(255,255,255,.045)"}));
+    svg.appendChild(el("text", {x:L-8, y:y(v)+3, class:"ax", "text-anchor":"end"}, `${v>=0?"+":"−"}${Math.abs(v).toFixed(2)}`));
+  }
+  // x ticks
+  for (let a = 0; a <= maxAge; a += 5){
+    svg.appendChild(el("line", {x1:x(a), y1:T, x2:x(a), y2:H-B, class:"grid"}));
+    svg.appendChild(el("text", {x:x(a), y:H-B+16, class:"ax", "text-anchor":"middle"}, a));
+  }
+  svg.appendChild(el("text", {x:(L+W-R)/2, y:H-2, class:"axt", "text-anchor":"middle"}, "TYRE AGE (LAP)"));
+  svg.appendChild(el("text", {x:14, y:T+2, class:"axt", "text-anchor":"end", transform:`rotate(-90 14 ${T+2})`}, "PACE DEFICIT (S)"));
 
-  const px=x(age), py=y(penalty(d,age));
-  $("chart").innerHTML = `
-    <style>
-      #chart .g{stroke:var(--rule);stroke-width:1}
-      #chart .ax{fill:var(--ink-faint);font:11px "JetBrains Mono",monospace}
-      #chart .axttl{fill:var(--ink-soft);font:12px "Archivo",sans-serif}
-      #chart .curve{fill:none;stroke:var(--answer);stroke-width:2.5}
-      #chart .band{fill:var(--band);stroke:none}
-      #chart .mk{fill:var(--answer)}
-      #chart .mkl{stroke:var(--answer);stroke-width:1;stroke-dasharray:3 3}
-    </style>
-    ${gy}${gx}
-    <path class="band" d="${bandTop}${bandBot}Z"/>
-    <path class="curve" d="${line(d)}"/>
-    <line class="mkl" x1="${px}" y1="${py}" x2="${px}" y2="${H-B}"/>
-    <circle class="mk" cx="${px}" cy="${py}" r="5"/>
-    <text class="axttl" x="${(L+W-R)/2}" y="${H-4}" text-anchor="middle">tyre age (laps)</text>
-    <text class="axttl" x="16" y="${T+2}" transform="rotate(-90 16 ${T+2})" text-anchor="end">penalty vs fresh tyre (s)</text>`;
-  return {d, stintLoss: penalty(d, maxAge), maxAge};
+  const g = el("g", {"clip-path":`url(#${clipId})`});
+
+  // CI band
+  const top = [], bot = [];
+  for (let a = 0; a <= maxAge; a++){ top.push(`${a?"L":"M"}${x(a)},${y(penalty(dHi,a))}`); }
+  for (let a = maxAge; a >= 0; a--){ bot.push(`L${x(a)},${y(penalty(dLo,a))}`); }
+  g.appendChild(el("path", {d: top.join("")+bot.join("")+"Z", fill:"rgba(255,255,255,.07)", stroke:"none"}));
+
+  // naive line (age-only)
+  const nline = [];
+  for (let a = 0; a <= maxAge; a++){ nline.push(`${a?"L":"M"}${x(a)},${y(naive*a)}`); }
+  g.appendChild(el("path", {d:nline.join(""), fill:"none", stroke:"rgba(255,255,255,.22)", "stroke-width":1, "stroke-dasharray":"3 2"}));
+
+  // clean curve
+  const cline = [];
+  for (let a = 0; a <= maxAge; a++){ cline.push(`${a?"L":"M"}${x(a)},${y(penalty(d,a))}`); }
+  g.appendChild(el("path", {d:cline.join(""), fill:"none", stroke:"rgba(255,255,255,.9)", "stroke-width":2.5, "stroke-linejoin":"round"}));
+
+  // current-age marker
+  const px = x(age), py = y(penalty(d, age));
+  g.appendChild(el("line", {x1:px, y1:py, x2:px, y2:H-B, stroke:"var(--red)", "stroke-width":1, "stroke-dasharray":"3 3"}));
+  g.appendChild(el("circle", {cx:px, cy:py, r:4.5, fill:"var(--red)"}));
+  svg.appendChild(g);
+
+  // naive annotation — sit it just above where the age-only line dives off the floor
+  const naiveExit = Math.min(maxAge, yMin / naive);
+  svg.appendChild(el("text", {x:x(naiveExit)+8, y:y(yMin)-6, class:"ax", fill:"rgba(255,255,255,.34)", "text-anchor":"start"}, "age-only fit: −0.170 s/lap ↘"));
+}
+
+function drawBars(circuit){
+  const box = $("bars"); box.innerHTML = "";
+  const fieldMax = COEF.circuits[RANKED[0]] * 1.05;
+  RANKED.forEach(c => {
+    const on = c === circuit;
+    const row = document.createElement("div");
+    row.className = "barrow" + (on ? " on" : "");
+    const m = COEF.meta[c];
+    row.innerHTML =
+      `<span class="nm">${c}${m.paired ? "" : ' <span class="star">△</span>'}</span>` +
+      `<span class="track">` +
+        `<span class="fill" style="width:${(COEF.circuits[c]/fieldMax*100).toFixed(1)}%"></span>` +
+        `<span class="ci" style="left:${(COEF.ci[c][0]/fieldMax*100).toFixed(1)}%;width:${((COEF.ci[c][1]-COEF.ci[c][0])/fieldMax*100).toFixed(1)}%"></span>` +
+      `</span>` +
+      `<span class="vv">${COEF.circuits[c].toFixed(3)}</span>`;
+    box.appendChild(row);
+  });
+}
+
+function drawFlip(){
+  const box = $("flip"); box.innerHTML = "";
+  const sp = COEF.slope_progression;
+  const lo = Math.min(...sp.map(s=>s.slope)), hi = Math.max(...sp.map(s=>s.slope));
+  const span = hi - lo;
+  const zeroPct = (-lo / span) * 100;
+  sp.forEach((s,i) => {
+    const row = document.createElement("div");
+    row.className = "fliprow" + (i === sp.length-1 ? " last" : "");
+    let seg;
+    if (s.slope >= 0){
+      seg = `<span class="seg pos" style="left:${zeroPct}%;width:${(s.slope/span*100).toFixed(1)}%"></span>`;
+    } else {
+      seg = `<span class="seg neg" style="left:${((s.slope-lo)/span*100).toFixed(1)}%;width:${(-s.slope/span*100).toFixed(1)}%"></span>`;
+    }
+    row.innerHTML =
+      `<span class="nm">${s.label.trim()}</span>` +
+      `<span class="dbar"><span class="zero" style="left:${zeroPct}%"></span>${seg}</span>` +
+      `<span class="vv">${s.slope>=0?"+":"−"}${Math.abs(s.slope).toFixed(3)}</span>`;
+    box.appendChild(row);
+  });
 }
 
 function render(){
   const circuit = circuitSel.value, compound = compoundSel.value;
   const temp = +tempSl.value, age = +ageSl.value;
   const m = COEF.meta[circuit];
-
-  $("circuit-d").textContent = `d = ${COEF.circuits[circuit].toFixed(3)} s/lap`;
-  $("circuit-note").innerHTML = COEF.circuit_note[circuit] +
-     (m.paired ? "" : ` · <span style="color:var(--answer-ink)">1 season only</span>`);
-  $("compound-mult").textContent = `×${COEF.compound_mult[compound].toFixed(3)}`;
   $("temp-val").textContent = temp;
   $("age-val").textContent = age;
 
-  const r = chart(circuit, compound, temp, age);
-  $("out-penalty").textContent = fmt(penalty(r.d, age)) + " s";
-  $("out-rate").textContent = fmt(r.d, 3) + " s/lap";
-  $("out-stint").textContent = fmt(r.stintLoss) + " s @ " + r.maxAge + " laps";
-  $("foot").innerHTML =
-    `d(${circuit}) ${COEF.circuits[circuit].toFixed(3)} ` +
-    `<span style="color:var(--ink-faint)">×</span> temp ${fmt(COEF.temp_slope_per_degC*(temp-m.tt_typ),3)} ` +
-    `<span style="color:var(--ink-faint)">×</span> compound ×${COEF.compound_mult[compound].toFixed(3)} ` +
-    `<span style="color:var(--ink-faint)">→</span> effective ${r.d.toFixed(4)} s/lap · ` +
-    `curvature ${COEF.curvature} · fuel recovered ${COEF.fuel_s_per_kg.recovered} s/kg`;
+  const d = rate(COEF.circuits[circuit], temp, circuit, compound);
+  const tAdj = COEF.temp_slope_per_degC * (temp - m.tt_typ);
+  const pen = penalty(d, age);
+  const cost = penalty(d, m.maxage);
+
+  $("k-pen").innerHTML = `${fmt(pen)}<span class="unit">s</span>`;
+  $("k-pen-s").textContent = `at ${age} laps · ${COEF.circuit_note[circuit]}`;
+  $("k-rate").innerHTML = `${fmt(d,3)}<span class="unit">s/lap</span>`;
+  $("k-rate-s").textContent = `d ${COEF.circuits[circuit].toFixed(3)} · temp ${fmt(tAdj,3)} · ${compound.toLowerCase()} ×${COEF.compound_mult[compound].toFixed(2)}`;
+  $("k-cost").innerHTML = `${fmt(cost,1)}<span class="unit">s</span>`;
+  $("k-cost-s").textContent = `cumulative over a ${m.maxage}-lap stint`;
+  $("k-cost-tag").textContent = circuit.toUpperCase();
+
+  $("chart-meta").textContent = `${compound} · ${circuit} · track ${temp}°C · age ${age} · ${m.year}${m.paired ? "" : " · 1 season"}`;
+  $("prov").textContent = `${COEF.n_races} races · ${m.year === "2024" ? "2024 only" : "2023–24"} · ${COEF.n_laps.toLocaleString()} laps · FastF1`;
+  $("alert-tx").textContent = compound === "SOFT"
+    ? "SOFT coefficient carries selection bias — softs are pitted before the cliff (FIA Art. 30.5)."
+    : (m.paired ? "Two-season fit — coefficient cross-validates across 2023 and 2024." : "Single-season circuit — coefficient cannot be cross-validated across years.");
+
+  drawChart(circuit, compound, temp, age);
+  drawBars(circuit);
 }
 
 circuitSel.onchange = () => { syncCompound(); syncRanges(); render(); };
 compoundSel.onchange = render;
 tempSl.oninput = () => { tempSl.dataset.touched = "1"; render(); };
 ageSl.oninput = render;
+addEventListener("resize", () => drawChart(circuitSel.value, compoundSel.value, +tempSl.value, +ageSl.value));
 
 circuitSel.value = "Bahrain";
 syncCompound(); syncRanges();
 ageSl.value = Math.min(15, COEF.meta.Bahrain.maxage);
+drawFlip();
 render();
 </script>
 </body>

@@ -166,9 +166,20 @@
     }
   },
   "n_laps": 10381,
+  "n_races": 13,
   "fuel_s_per_kg": {
     "prior": 0.03,
     "recovered": 0.0302
   },
+  "naive_s_per_lap": -0.170,
+  "full_s_per_lap": 0.1137,
+  "slope_progression": [
+    { "label": "tyre age only", "slope": -0.170 },
+    { "label": "+ circuit", "slope": -0.0107 },
+    { "label": "+ compound", "slope": -0.0042 },
+    { "label": "+ track temp", "slope": 0.0008 },
+    { "label": "+ track evolution", "slope": 0.0662 },
+    { "label": "+ fuel  (full model)", "slope": 0.1137 }
+  ],
   "formula": "D(a) = (d_circuit + temp_slope*(trackTemp - circuit_typical_temp)) * compound_mult * a  +  curvature * a^2"
 }
